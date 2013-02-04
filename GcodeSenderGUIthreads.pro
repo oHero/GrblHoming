@@ -50,7 +50,8 @@ HEADERS  += mainwindow.h \
     itemtobase.h \
     arcitem.h \
     pointitem.h \
-    termiosext.h
+    termiosext.h \
+    libudevext.h
 
 FORMS    += mainwindow.ui \
     options.ui \

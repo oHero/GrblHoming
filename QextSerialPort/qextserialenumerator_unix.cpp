@@ -46,9 +46,9 @@ void QextSerialEnumeratorPrivate::platformSpecificDestruct()
 QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
 {
     QList<QextPortInfo> infoList;
-#ifdef Q_OS_LINUX
+#if (defined(Q_OS_LINUX) || defined(Q_OS_ANDROID))
     QStringList portNamePrefixes, portNameList;
-    portNamePrefixes << QLatin1String("ttyS*"); // list normal serial ports first
+    portNamePrefixes << QLatin1String("tty*"); // list normal serial ports first
 
     QDir dir(QLatin1String("/dev"));
     portNameList = dir.entryList(portNamePrefixes, (QDir::System | QDir::Files), QDir::Name);
@@ -77,7 +77,7 @@ QList<QextPortInfo> QextSerialEnumeratorPrivate::getPorts_sys()
         inf.physName = QLatin1String("/dev/")+str;
         inf.portName = str;
 
-        if (str.contains(QLatin1String("ttyS"))) {
+        if (str.contains(QLatin1String("tty"))) {
             inf.friendName = QLatin1String("Serial port ")+str.remove(0, 4);
         }
         else if (str.contains(QLatin1String("ttyUSB"))) {

@@ -47,6 +47,9 @@
 #include <QtCore/QReadWriteLock>
 #ifdef Q_OS_UNIX
 #  include <termios.h>
+#endif
+#ifdef Q_OS_ANDROID
+#include "../termiosext.h"
 #elif (defined Q_OS_WIN)
 #  include <QtCore/qt_windows.h>
 #endif

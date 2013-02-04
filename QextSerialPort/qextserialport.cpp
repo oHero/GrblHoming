@@ -426,7 +426,8 @@ QextSerialPort::QextSerialPort(QextSerialPort::QueryMode mode, QObject *parent)
 
 #elif defined(Q_OS_OPENBSD)
     setPortName(QLatin1String("/dev/tty00"));
-
+#elif defined(Q_OS_ANDROID)
+    setPortName(QLatin1String("/dev/tty00"));
 #else
     setPortName(QLatin1String("/dev/ttyS0"));
 #endif

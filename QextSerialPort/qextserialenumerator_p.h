@@ -61,11 +61,18 @@
 #  include <IOKit/usb/IOUSBLib.h>
 #endif /*Q_OS_MAC*/
 
-#if defined(Q_OS_LINUX) && !defined(QESP_NO_UDEV)
+#if defined (Q_OS_ANDROID)
 #  include <QSocketNotifier>
 extern "C" {
-#  include <libudev.h>
+#  include "libudevext.h"
 }
+#endif
+
+#if (defined(Q_OS_LINUX) || defined(Q_OS_ANDROID)) && !defined(QESP_NO_UDEV)
+#  include <QSocketNotifier>
+//extern "C" {
+//#  include <libudev.h>
+//}
 #endif
 
 class QextSerialRegistrationWidget;
@@ -104,7 +111,7 @@ public:
     IONotificationPortRef notificationPortRef;
 #endif // Q_OS_MAC
 
-#if defined(Q_OS_LINUX) && !defined(QESP_NO_UDEV)
+#if (defined(Q_OS_LINUX) || defined(Q_OS_ANDROID)) && !defined(QESP_NO_UDEV)
     QSocketNotifier *notifier;
     int notifierFd;
     struct udev *udev;

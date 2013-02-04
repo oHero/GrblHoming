@@ -130,11 +130,11 @@ MainWindow::MainWindow(QWidget *parent) :
         if (ports.at(i).portName == lastOpenPort)
             portIndex = i;
 
-        //diag("port name: %s\n", ports.at(i).portName.toLocal8Bit().constData());
-        //diag("friendly name: %s\n", ports.at(i).friendName.toLocal8Bit().constData());
-        //diag("physical name: %s\n", ports.at(i).physName.toLocal8Bit().constData());
-        //diag("enumerator name: %s\n", ports.at(i).enumName.toLocal8Bit().constData());
-        //diag("===================================\n\n");
+        diag("port name: %s\n", ports.at(i).portName.toLocal8Bit().constData());
+        diag("friendly name: %s\n", ports.at(i).friendName.toLocal8Bit().constData());
+        diag("physical name: %s\n", ports.at(i).physName.toLocal8Bit().constData());
+        diag("enumerator name: %s\n", ports.at(i).enumName.toLocal8Bit().constData());
+        diag("===================================\n");
     }
 
     if (ports.size() > 0)

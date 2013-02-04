@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>838</width>
-    <height>625</height>
+    <height>542</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -24,6 +24,11 @@
     <width>10000000</width>
     <height>10000000</height>
    </size>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>6</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Grbl Controller</string>
@@ -47,10 +52,28 @@
        <property name="palette">
         <palette>
          <active>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
              <red>0</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Text">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
              <green>0</green>
              <blue>0</blue>
             </color>
@@ -58,6 +81,15 @@
           </colorrole>
          </active>
          <inactive>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
@@ -67,14 +99,41 @@
             </color>
            </brush>
           </colorrole>
+          <colorrole role="Text">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
          </inactive>
          <disabled>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>170</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
              <red>0</red>
              <green>0</green>
              <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Text">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>170</red>
+             <green>255</green>
+             <blue>255</blue>
             </color>
            </brush>
           </colorrole>
@@ -104,6 +163,15 @@
        <property name="palette">
         <palette>
          <active>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
@@ -115,6 +183,15 @@
           </colorrole>
          </active>
          <inactive>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
@@ -126,6 +203,15 @@
           </colorrole>
          </inactive>
          <disabled>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>170</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
@@ -161,6 +247,15 @@
        <property name="palette">
         <palette>
          <active>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
@@ -172,6 +267,15 @@
           </colorrole>
          </active>
          <inactive>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>0</green>
+             <blue>0</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
@@ -183,6 +287,15 @@
           </colorrole>
          </inactive>
          <disabled>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>170</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
           <colorrole role="Light">
            <brush brushstyle="SolidPattern">
             <color alpha="255">
@@ -282,10 +395,52 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>320</y>
+      <y>310</y>
       <width>341</width>
-      <height>231</height>
+      <height>191</height>
      </rect>
+    </property>
+    <property name="palette">
+     <palette>
+      <active>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </active>
+      <inactive>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </inactive>
+      <disabled>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </disabled>
+     </palette>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>6</pointsize>
+     </font>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBoxSendFile">
@@ -295,10 +450,56 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>80</y>
+      <y>90</y>
       <width>341</width>
-      <height>161</height>
+      <height>151</height>
      </rect>
+    </property>
+    <property name="palette">
+     <palette>
+      <active>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </active>
+      <inactive>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </inactive>
+      <disabled>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </disabled>
+     </palette>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>6</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+      <kerning>true</kerning>
+     </font>
     </property>
     <property name="title">
      <string>Send File</string>
@@ -307,17 +508,35 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>10</y>
        <width>321</width>
-       <height>61</height>
+       <height>81</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0" colspan="4">
-       <widget class="QLineEdit" name="filePath"/>
+       <widget class="QLineEdit" name="filePath">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
       </item>
       <item row="1" column="2">
        <widget class="QPushButton" name="Begin">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>6</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Begin</string>
         </property>
@@ -325,6 +544,17 @@
       </item>
       <item row="1" column="3">
        <widget class="QPushButton" name="Stop">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>6</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Stop</string>
         </property>
@@ -345,6 +575,17 @@
       </item>
       <item row="1" column="0">
        <widget class="QPushButton" name="openFile">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>6</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Choose file</string>
         </property>
@@ -356,10 +597,16 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>90</y>
+       <y>100</y>
        <width>321</width>
        <height>23</height>
       </rect>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
      <property name="value">
       <number>0</number>
@@ -377,6 +624,17 @@
        <height>16</height>
       </rect>
      </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>6</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Runtime:</string>
      </property>
@@ -393,6 +651,17 @@
        <height>16</height>
       </rect>
      </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>6</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -405,13 +674,19 @@
     <property name="geometry">
      <rect>
       <x>700</x>
-      <y>530</y>
+      <y>410</y>
       <width>121</width>
-      <height>31</height>
+      <height>81</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
     <property name="text">
-     <string>GRBL settings</string>
+     <string>GRBL
+Settings</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBoxManualGCode">
@@ -421,10 +696,15 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>250</y>
+      <y>240</y>
       <width>341</width>
       <height>61</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>6</pointsize>
+     </font>
     </property>
     <property name="title">
      <string>Manual GCode</string>
@@ -433,14 +713,20 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>10</y>
        <width>321</width>
-       <height>31</height>
+       <height>41</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Command</string>
         </property>
@@ -451,6 +737,12 @@
       </item>
       <item>
        <widget class="QLineEdit" name="Command">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -463,10 +755,21 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>50</y>
+      <y>40</y>
       <width>101</width>
-      <height>21</height>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>6</pointsize>
+     </font>
     </property>
     <property name="text">
      <string>Open</string>
@@ -476,19 +779,22 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>10</y>
+      <y>0</y>
       <width>341</width>
-      <height>31</height>
+      <height>41</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="layoutComPort">
+     <property name="spacing">
+      <number>6</number>
+     </property>
      <property name="leftMargin">
       <number>0</number>
      </property>
      <item>
       <widget class="QLabel" name="lblPort">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -499,6 +805,11 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Port name</string>
        </property>
@@ -507,7 +818,7 @@
      <item>
       <widget class="QComboBox" name="cmbPort">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -517,6 +828,75 @@
          <width>220</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="palette">
+        <palette>
+         <active>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>0</red>
+             <green>0</green>
+             <blue>127</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Text">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>0</red>
+             <green>0</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </active>
+         <inactive>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>0</red>
+             <green>0</green>
+             <blue>127</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Text">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>0</red>
+             <green>0</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </inactive>
+         <disabled>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>0</red>
+             <green>85</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Text">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>190</red>
+             <green>190</green>
+             <blue>190</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </disabled>
+        </palette>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
        </property>
       </widget>
      </item>
@@ -709,10 +1089,15 @@
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>470</y>
+      <y>400</y>
       <width>161</width>
-      <height>91</height>
+      <height>101</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>6</pointsize>
+     </font>
     </property>
     <property name="title">
      <string>Reset Control</string>
@@ -721,14 +1106,20 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>10</y>
        <width>141</width>
-       <height>66</height>
+       <height>81</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QPushButton" name="btnResetGrbl">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Soft Reset Grbl</string>
         </property>
@@ -736,6 +1127,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="btnUnlockGrbl">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Unlock Grbl</string>
         </property>
@@ -756,6 +1153,17 @@
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="labelMachCoord">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Machine Coordinates</string>
        </property>
@@ -763,6 +1171,17 @@
      </item>
      <item>
       <widget class="QLabel" name="outputUnitsMachine">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -782,6 +1201,17 @@
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="labelWorkCoord">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Work Coordinates</string>
        </property>
@@ -789,6 +1219,17 @@
      </item>
      <item>
       <widget class="QLabel" name="outputUnitsWork">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -808,6 +1249,17 @@
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <widget class="QLabel" name="labelLastState">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Last State:</string>
        </property>
@@ -815,6 +1267,17 @@
      </item>
      <item>
       <widget class="QLabel" name="outputLastState">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -826,7 +1289,7 @@
     <property name="geometry">
      <rect>
       <x>550</x>
-      <y>480</y>
+      <y>410</y>
       <width>141</width>
       <height>81</height>
      </rect>
@@ -834,9 +1297,15 @@
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
       <widget class="QPushButton" name="btnSetHome">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="font">
         <font>
-         <pointsize>11</pointsize>
+         <pointsize>6</pointsize>
         </font>
        </property>
        <property name="autoFillBackground">
@@ -849,6 +1318,17 @@
      </item>
      <item>
       <widget class="QPushButton" name="btnGoHomeSafe">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Go Home</string>
        </property>
@@ -860,10 +1340,15 @@
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>180</y>
+      <y>170</y>
       <width>441</width>
-      <height>281</height>
+      <height>221</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>6</pointsize>
+     </font>
     </property>
     <property name="currentIndex">
      <number>0</number>
@@ -876,7 +1361,7 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>20</y>
+        <y>0</y>
         <width>214</width>
         <height>120</height>
        </rect>
@@ -969,9 +1454,9 @@
       <property name="geometry">
        <rect>
         <x>330</x>
-        <y>10</y>
+        <y>0</y>
         <width>70</width>
-        <height>132</height>
+        <height>121</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="layoutZJog">
@@ -996,7 +1481,7 @@
         <widget class="QLabel" name="lblZJog">
          <property name="font">
           <font>
-           <pointsize>10</pointsize>
+           <pointsize>8</pointsize>
            <weight>75</weight>
            <bold>true</bold>
           </font>
@@ -1032,21 +1517,44 @@
       <property name="geometry">
        <rect>
         <x>320</x>
-        <y>170</y>
+        <y>120</y>
         <width>101</width>
-        <height>51</height>
+        <height>71</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayoutStepSize">
        <item>
         <widget class="QLabel" name="lblStep">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>6</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Step Size           </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboStep"/>
+        <widget class="QComboBox" name="comboStep">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>6</pointsize>
+          </font>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -1054,7 +1562,7 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>170</y>
+        <y>130</y>
         <width>281</width>
         <height>61</height>
        </rect>
@@ -1062,6 +1570,17 @@
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QCheckBox" name="chkRestoreAbsolute">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>6</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Absolute coordinates after adjust</string>
          </property>
@@ -1069,6 +1588,17 @@
        </item>
        <item>
         <widget class="QCheckBox" name="SpindleOn">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>6</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Spindle On</string>
          </property>
@@ -1170,7 +1700,7 @@
      <x>0</x>
      <y>0</y>
      <width>838</width>
-     <height>21</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">

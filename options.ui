@@ -10,6 +10,11 @@
     <height>398</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>6</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>Options</string>
   </property>
@@ -35,7 +40,7 @@
      <x>40</x>
      <y>10</y>
      <width>151</width>
-     <height>101</height>
+     <height>111</height>
     </rect>
    </property>
    <property name="title">
@@ -47,12 +52,18 @@
       <x>10</x>
       <y>19</y>
       <width>131</width>
-      <height>71</height>
+      <height>81</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayoutInvert">
      <item>
       <widget class="QCheckBox" name="chkInvZ">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>Z Axis</string>
        </property>
@@ -60,6 +71,12 @@
      </item>
      <item>
       <widget class="QCheckBox" name="chkInvY">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>Y Axis</string>
        </property>
@@ -67,6 +84,12 @@
      </item>
      <item>
       <widget class="QCheckBox" name="chkInvX">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>X Axis</string>
        </property>
@@ -79,7 +102,7 @@
    <property name="geometry">
     <rect>
      <x>210</x>
-     <y>20</y>
+     <y>10</y>
      <width>261</width>
      <height>16</height>
     </rect>
@@ -92,10 +115,16 @@
    <property name="geometry">
     <rect>
      <x>210</x>
-     <y>40</y>
+     <y>31</y>
      <width>71</width>
-     <height>22</height>
+     <height>31</height>
     </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
    </property>
    <property name="minimum">
     <number>1</number>
@@ -125,7 +154,7 @@
     <rect>
      <x>40</x>
      <y>130</y>
-     <width>431</width>
+     <width>461</width>
      <height>17</height>
     </rect>
    </property>
@@ -137,9 +166,9 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>170</y>
+     <y>150</y>
      <width>471</width>
-     <height>91</height>
+     <height>111</height>
     </rect>
    </property>
    <property name="title">
@@ -149,14 +178,20 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>20</y>
+      <y>10</y>
       <width>451</width>
-      <height>51</height>
+      <height>91</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayoutRateLimit">
      <item row="0" column="0">
       <widget class="QCheckBox" name="chkLimitZRate">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>Limit Z Rate</string>
        </property>
@@ -164,6 +199,12 @@
      </item>
      <item row="0" column="3">
       <widget class="QDoubleSpinBox" name="doubleSpinZRateLimit">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="accelerated">
         <bool>true</bool>
        </property>
@@ -202,6 +243,12 @@
      </item>
      <item row="0" column="2">
       <widget class="QLabel" name="labelZRateLimit">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>Z-Rate Limit (inches or mm/min)</string>
        </property>
@@ -209,6 +256,12 @@
      </item>
      <item row="1" column="2">
       <widget class="QLabel" name="labelXYRate">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>XY Rate (inches or mm/min)</string>
        </property>
@@ -216,6 +269,12 @@
      </item>
      <item row="1" column="3">
       <widget class="QDoubleSpinBox" name="doubleSpinXYRate">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="decimals">
         <number>2</number>
        </property>
@@ -239,8 +298,14 @@
      <x>210</x>
      <y>90</y>
      <width>91</width>
-     <height>22</height>
+     <height>31</height>
     </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
    </property>
    <property name="accelerated">
     <bool>true</bool>
@@ -276,6 +341,12 @@
    <layout class="QVBoxLayout" name="verticalLayoutExtras">
     <item>
      <widget class="QCheckBox" name="chkAggressivePreload">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Use aggressive preload strategy for Grbl</string>
       </property>
@@ -283,6 +354,12 @@
     </item>
     <item>
      <widget class="QCheckBox" name="checkBoxEnableDebugLog">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Write debugging log to home folder (requires restart)</string>
       </property>
