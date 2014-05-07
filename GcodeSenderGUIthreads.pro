@@ -31,7 +31,9 @@ SOURCES += main.cpp\
     itemtobase.cpp \
     arcitem.cpp \
     pointitem.cpp \
-    controlparams.cpp
+    controlparams.cpp \
+    grblinterface.cpp \
+    cmdresponse.cpp
 
 HEADERS  += mainwindow.h \
     rs232.h \
@@ -54,7 +56,9 @@ HEADERS  += mainwindow.h \
     pointitem.h \
     termiosext.h \
     controlparams.h \
-    version.h
+    version.h \
+    grblinterface.h \
+    cmdresponse.h
 
 FORMS    += mainwindow.ui \
     options.ui \

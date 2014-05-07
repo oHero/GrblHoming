@@ -82,7 +82,8 @@ Options::Options(QWidget *parent) :
     }
 
     ui->checkBoxEnableDebugLog->setChecked(enDebugLog == "true");
-    ui->chkAggressivePreload->setChecked(enAggressivePreload == "true");
+    //ui->chkAggressivePreload->setChecked(enAggressivePreload == "true");
+    ui->chkAggressivePreload->hide();
     //ui->checkBoxWaitForJogToComplete->setChecked(waitForJogToComplete == "true");
     ui->checkBoxWaitForJogToComplete->hide();
     ui->checkBoxUseMmManualCmds->setChecked(useMmManualCmds == "true");
@@ -152,7 +153,7 @@ void Options::accept()
     settings.setValue(SETTINGS_INVERSE_Z, ui->chkInvZ->isChecked());
     settings.setValue(SETTINGS_INVERSE_FOURTH, ui->chkInvFourth->isChecked());
     settings.setValue(SETTINGS_ENABLE_DEBUG_LOG, ui->checkBoxEnableDebugLog->isChecked());
-    settings.setValue(SETTINGS_USE_AGGRESSIVE_PRELOAD, ui->chkAggressivePreload->isChecked());
+    //settings.setValue(SETTINGS_USE_AGGRESSIVE_PRELOAD, ui->chkAggressivePreload->isChecked());
     settings.setValue(SETTINGS_WAIT_FOR_JOG_TO_COMPLETE, ui->checkBoxWaitForJogToComplete->isChecked());
     settings.setValue(SETTINGS_USE_MM_FOR_MANUAL_CMDS, ui->checkBoxUseMmManualCmds->isChecked());
     settings.setValue(SETTINGS_FOUR_AXIS_USE, ui->checkBoxFourAxis->isChecked());

@@ -11,88 +11,38 @@
 
 #include <QObject>
 
-GCode::GCode()
-    : errorCount(0), doubleDollarFormat(false),
-      incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
-      maxZ(0), motionOccurred(false),
-      sliderZCount(0),
-      positionValid(false),
-      numaxis(DEFAULT_AXIS_COUNT)
+GCode::GCode(GrblInterface& grblIfc)
+    : grbl(grblIfc)
 {
-    // use base class's timer - use it to capture random text from the controller
-    startTimer(1000);
     // for position polling
     pollPosTimer.start();
-}
-
-void GCode::openPort(QString commPortStr, QString baudRate)
-{
-    numaxis = controlParams.useFourAxis ? MAX_AXIS_COUNT : DEFAULT_AXIS_COUNT;
-
-    clearToHome();
-
-    currComPort = commPortStr;
-
-    port.setCharSendDelayMs(controlParams.charSendDelayMs);
-
-    if (port.OpenComport(commPortStr, baudRate))
-    {
-        emit portIsOpen(true);
-    }
-    else
-    {
-        emit portIsClosed(false);
-        QString msg = tr("Can't open COM port ") + commPortStr;
-        sendMsg(msg);
-        addList(msg);
-        warn("%s", qPrintable(msg));
-
-        addList(tr("-Is hardware connected to USB?") );
-        addList(tr("-Is correct port chosen?") );
-        addList(tr("-Does current user have sufficient permissions?") );
-#if defined(Q_OS_LINUX)
-        addList("-Is current user in sudoers group?");
-#endif
-        //QMessageBox(QMessageBox::Critical,"Error","Could not open port.",QMessageBox::Ok).exec();
-    }
-}
-
-void GCode::closePort(bool reopen)
-{
-    port.CloseComport();
-    emit portIsClosed(reopen);
-}
-
-bool GCode::isPortOpen()
-{
-    return port.isPortOpen();
 }
 
 // Abort means stop file send after the end of this line
 void GCode::setAbort()
 {
     // cross-thread operation, only set one atomic variable in this method (bool in this case) or add critsec
-    abortState.set(true);
+    grbl.setAbortState(true);
 }
 
 // Reset means immediately stop waiting for a response
 void GCode::setReset()
 {
     // cross-thread operation, only set one atomic variable in this method (bool in this case) or add critsec
-    resetState.set(true);
+    grbl.setResetState(true);
 }
 
 // Shutdown means app is shutting down - we give thread about .3 sec to exit what it is doing
 void GCode::setShutdown()
 {
     // cross-thread operation, only set one atomic variable in this method (bool in this case) or add critsec
-    shutdownState.set(true);
+    grbl.setShutdownState(true);
 }
 
 // Slot for interrupting current operation or doing a clean reset of grbl without changing position values
 void GCode::sendGrblReset()
 {
-    clearToHome();
+    grbl.clearToHome();
 
     QString x(CTRL_X);
     sendGcodeLocal(x, true, SHORT_WAIT_SEC);
@@ -106,9 +56,9 @@ void GCode::sendGrblUnlock()
 // Slot for gcode-based 'zero out the current position values without motion'
 void GCode::grblSetHome()
 {
-    clearToHome();
+    grbl.clearToHome();
 
-    if (numaxis == MAX_AXIS_COUNT)
+    if (grbl.getNumAxis() == MAX_AXIS_COUNT)
         gotoXYZFourth(QString("G92 x0 y0 z0 ").append(QString(controlParams.fourthAxisType)).append("0"));
 	else
         gotoXYZFourth("G92 x0 y0 z0");
@@ -116,12 +66,12 @@ void GCode::grblSetHome()
 
 void GCode::goToHome()
 {
-    if (!motionOccurred)
+    if (!grbl.isMotionOccurred())
         return;
 
-    double maxZOver = maxZ;
+    double maxZOver = grbl.getMaxZ();
 
-    if (doubleDollarFormat)
+    if (grbl.isDoubleDollarFormat())
     {
         maxZOver += (controlParams.useMm ? PRE_HOME_Z_ADJ_MM : (PRE_HOME_Z_ADJ_MM / MM_IN_AN_INCH));
     }
@@ -135,14 +85,14 @@ void GCode::goToHome()
 
     gotoXYZFourth(QString("G0 z").append(zpos));
 
-    if (numaxis == MAX_AXIS_COUNT)
+    if (grbl.getNumAxis() == MAX_AXIS_COUNT)
         gotoXYZFourth(QString("G1 x0 y0 z0 ").append(QString(controlParams.fourthAxisType)).append("0"));
 	else
         gotoXYZFourth("G1 x0 y0 z0");
 
-    maxZ -= maxZOver;
+    grbl.reduceMaxZ(maxZOver);
 
-    motionOccurred = false;
+    grbl.clearMotionOccurred();
 }
 
 // Slot called from other threads (i.e. main window, grbl dialog, etc.)
@@ -153,12 +103,12 @@ void GCode::sendGcode(QString line)
     // empty line means we have just opened the com port
     if (line.length() == 0)
     {
-        resetState.set(false);
+        grbl.setResetState(false);
 
         QString result;
         if (!waitForStartupBanner(result, SHORT_WAIT_SEC, false))
         {
-            if (shutdownState.get() || resetState.get())
+            if (grbl.getShutdownState() || grbl.getResetState())
                 return;
             // it is possible that we are already connected and missed the
             // signon banner. Force a reset (is this ok?) to get the banner
@@ -170,14 +120,8 @@ void GCode::sendGcode(QString line)
             buf[0] = CTRL_X;
 
 			diag(qPrintable(tr("SENDING: 0x%02X (CTRL-X) to check presence of Grbl\n")), buf[0])  ;
-            if (!port.SendBuf(buf, 1))
-            {
-                QString msg = tr("Sending to port failed");
-				err("%s", qPrintable(msg));
-                emit addList(msg);
-                emit sendMsg(msg);
-                return;
-            }
+
+            grbl.sendToPort(buf);
 
             if (!waitForStartupBanner(result, SHORT_WAIT_SEC, true))
                 return;
@@ -218,24 +162,24 @@ void GCode::pollPosWaitForIdle(bool checkMeasurementUnits)
                 continue;
             }
 
-            if (doubleDollarFormat)
+            if (grbl.isDoubleDollarFormat())
             {
-                if (lastState.compare("Run") != 0)
+                if (grbl.getLastState().compare("Run") != 0)
                     break;
             }
             else
             {
-                if (machineCoordLastIdlePos == machineCoord
-                    && workCoordLastIdlePos == workCoord)
+                if (machineCoordLastIdlePos == grbl.getMachineCoord()
+                    && workCoordLastIdlePos == grbl.getWorkCoord())
                 {
                     break;
                 }
 
-                machineCoordLastIdlePos = machineCoord;
-                workCoordLastIdlePos = workCoord;
+                machineCoordLastIdlePos = grbl.getMachineCoord();
+                workCoordLastIdlePos = grbl.getWorkCoord();
             }
 
-            if (shutdownState.get())
+            if (grbl.getShutdownState())
                 return;
         }
 
@@ -244,7 +188,7 @@ void GCode::pollPosWaitForIdle(bool checkMeasurementUnits)
 
         if (checkMeasurementUnits)
         {
-            if (doubleDollarFormat)
+            if (grbl.isDoubleDollarFormat())
                 checkAndSetCorrectMeasurementUnits();
             else
                 setOldFormatMeasurementUnitControl();
@@ -252,7 +196,7 @@ void GCode::pollPosWaitForIdle(bool checkMeasurementUnits)
     }
     else
     {
-        setLivenessState(false);
+        grbl.setLivenessState(false);
     }
 }
 
@@ -262,8 +206,8 @@ void GCode::sendGcodeAndGetResult(int id, QString line)
     QString result;
 
     emit sendMsg("");
-    resetState.set(false);
-    if (!sendGcodeInternal(line, result, false, SHORT_WAIT_SEC, false))
+    grbl.setResetState(false);
+    if (!grbl.sendWithBlock(line, result, grblCmdErrors, false, SHORT_WAIT_SEC))
         result.clear();
 
     emit gcodeResult(id, result);
@@ -271,35 +215,38 @@ void GCode::sendGcodeAndGetResult(int id, QString line)
 
 // To be called only from this class, not from other threads. Use above two methods for that.
 // Wraps sendGcodeInternal() to allow proper handling of failure cases, etc.
-bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */, bool aggressive /* = false */, int currLine /* = 0 */)
+bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */, int currLine /* = 0 */)
 {
     QString result;
     sendMsg("");
-    resetState.set(false);
+    grbl.setResetState(false);
 
-    bool ret = sendGcodeInternal(line, result, recordResponseOnFail, waitSec, aggressive, currLine);
-    if (shutdownState.get())
+    bool ret = grbl.sendWithBlock(line, result, grblCmdErrors, recordResponseOnFail, waitSec, currLine);
+    if (grbl.getShutdownState())
         return false;
 
-    if (!ret && (!recordResponseOnFail || resetState.get()))
+    if (!ret && (!recordResponseOnFail || grbl.getResetState()))
     {
-        if (!resetState.get())
+        if (!grbl.getResetState())
             emit stopSending();
 
-        if (!ret && resetState.get())
+        if (!ret && grbl.getResetState())
         {
-            resetState.set(false);
-            port.Reset();
+            grbl.setResetState(false);
+            grbl.resetPort();
         }
     }
     else
     {
+        if (!grbl.waitForAllResponses(grblCmdErrors))
+            return false;
+
         if (checkGrbl(result))
         {
             emit enableGrblDialogButton();
         }
     }
-    resetState.set(false);
+    grbl.setResetState(false);
     return ret;
 }
 
@@ -310,7 +257,7 @@ bool GCode::checkGrbl(const QString& result)
         QRegExp rx("Grbl (\\d+)\\.(\\d+)(\\w*)");
         if (rx.indexIn(result) != -1 && rx.captureCount() > 0)
         {
-            doubleDollarFormat = false;
+            grbl.setDoubleDollarFormat(false);
 
             QStringList list = rx.capturedTexts();
             if (list.size() >= 3)
@@ -325,415 +272,19 @@ bool GCode::checkGrbl(const QString& result)
 
                 if (majorVer > 0 || (minorVer > 8 && minorVer < 51) || letter > 'a')
                 {
-                    doubleDollarFormat = true;
+                    grbl.setDoubleDollarFormat(true);
                 }
 
                 diag(qPrintable(tr("Got Grbl Version (Parsed:) %d.%d%c ($$=%d)\n")),
-                            majorVer, minorVer, letter, doubleDollarFormat);
+                            majorVer, minorVer, letter, grbl.isDoubleDollarFormat());
             }
 
-            if (!doubleDollarFormat)
+            if (!grbl.isDoubleDollarFormat())
                 setUnitsTypeDisplay(true);
         }
         return true;
     }
     return false;
-}
-
-// Wrapped method. Should only be called from above method.
-bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive, int currLine /* = 0 */)
-{
-    if (!port.isPortOpen())
-    {
-        QString msg = tr("Port not available yet")  ;
-        err("%s", msg.toLocal8Bit().constData());
-        emit addList(msg);
-        emit sendMsg(msg);
-        return false;
-    }
-
-    bool ctrlX = line.size() > 0 ? (line.at(0).toLatin1() == CTRL_X) : false;
-
-    bool sentReqForLocation = false;
-    bool sentReqForSettings = false;
-    bool sentReqForParserState = false;
-
-    if (checkForGetPosStr(line))
-    {
-        sentReqForLocation = true;
-        setLivenessState(true);
-    }
-    else if (!line.compare(REQUEST_PARSER_STATE_V08c))
-    {
-        sentReqForParserState = true;
-    }
-    else if (!line.compare(SETTINGS_COMMAND_V08a))
-    {
-        if (doubleDollarFormat)
-            line = SETTINGS_COMMAND_V08c;
-
-        sentReqForSettings = true;
-    }
-    else
-        motionOccurred = true;
-
-    // adds to UI list, but prepends a > indicating a sent command
-    if (ctrlX)
-    {
-        emit addListOut("(CTRL-X)");
-    }
-    else if (!sentReqForLocation)// if requesting location, don't add that "noise" to the output view
-    {
-        emit addListOut(line);
-    }
-
-    if (line.size() == 0 || (!line.endsWith('\r') && !ctrlX))
-        line.append('\r');
-
-    char buf[BUF_SIZE + 1] = {0};
-    if (line.length() >= BUF_SIZE)
-    {
-        QString msg = tr("Buffer size too small");
-        err("%s", qPrintable(msg));
-        emit addList(msg);
-        emit sendMsg(msg);
-        return false;
-    }
-    for (int i = 0; i < line.length(); i++)
-        buf[i] = line.at(i).toLatin1();
-
-    if (ctrlX)
-        diag(qPrintable(tr("SENDING[%d]: 0x%02X (CTRL-X)\n")), currLine, buf[0]);
-    else
-        diag(qPrintable(tr("SENDING[%d]: %s\n")), currLine, buf);
-
-    int waitSecActual = waitSec == -1 ? controlParams.waitTime : waitSec;
-
-    if (aggressive)
-    {
-        if (ctrlX)
-            sendCount.append(CmdResponse("(CTRL-X)", line.length(), currLine));
-        else
-            sendCount.append(CmdResponse(buf, line.length(), currLine));
-
-        //diag("DG Buffer Add %d", sendCount.size());
-
-        emit setQueuedCommands(sendCount.size(), true);
-
-        waitForOk(result, waitSecActual, false, false, aggressive, false);
-
-        if (shutdownState.get())
-            return false;
-    }
-
-    if (!port.SendBuf(buf, line.length()))
-    {
-        QString msg = tr("Sending to port failed")  ;
-        err("%s", qPrintable(msg));
-        emit addList(msg);
-        emit sendMsg(msg);
-        return false;
-    }
-    else
-    {
-        sentI++;
-        if (!waitForOk(result, waitSecActual, sentReqForLocation, sentReqForParserState, aggressive, false))
-        {
-            diag(qPrintable(tr("WAITFOROK FAILED\n")));
-            if (shutdownState.get())
-                return false;
-
-            if (!recordResponseOnFail && !(resetState.get() || abortState.get()))
-            {
-                QString msg = tr("Wait for ok failed");
-                emit addList(msg);
-                emit sendMsg(msg);
-            }
-
-            return false;
-        }
-        else
-        {
-            if (sentReqForSettings)
-            {
-                QStringList list = result.split("$");
-                for (int i = 0; i < list.size(); i++)
-                {
-                    QString item = list.at(i);
-                    const QRegExp rx(REGEXP_SETTINGS_LINE);
-
-                    if (rx.indexIn(item, 0) != -1 && rx.captureCount() == 3)
-                    {
-                        QStringList capList = rx.capturedTexts();
-                        if (!capList.at(1).compare("13"))
-                        {
-                            if (!capList.at(2).compare("0"))
-                            {
-                                if (!controlParams.useMm)
-                                    incorrectLcdDisplayUnits = true;
-                            }
-                            else
-                            {
-                                if (controlParams.useMm)
-                                    incorrectLcdDisplayUnits = true;
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                settingsItemCount.set(list.size());
-            }
-        }
-    }
-    return true;
-}
-
-bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool aggressive, bool finalize)
-{
-    int okcount = 0;
-
-    if (aggressive)
-    {
-        //if (!port.bytesAvailable()) //more conservative code
-        if (!finalize || !port.bytesAvailable())
-        {
-            int total = 0;
-            bool haveWait = false;
-            foreach (CmdResponse cmdResp, sendCount)
-            {
-                total += cmdResp.count;
-                if (cmdResp.waitForMe)
-                {
-                    haveWait = true;
-                }
-            }
-
-            //printf("Total out (a): %d (%d) (%d)\n", total, sendCount.size(), haveWait);
-
-            if (!haveWait)
-            {
-                if (total < (GRBL_RX_BUFFER_SIZE - 1))
-                {
-                    return true;
-                }
-            }
-        }
-    }
-
-    char tmp[BUF_SIZE + 1] = {0};
-    int count = 0;
-    int waitCount = waitSec * 10;// multiplier depends on sleep values below
-    bool status = true;
-    result.clear();
-    while (!result.contains(RESPONSE_OK) && !result.contains(RESPONSE_ERROR) && !resetState.get())
-    {
-        int n = port.PollComportLine(tmp, BUF_SIZE);
-        if (n == 0)
-        {
-            if (aggressive && sendCount.size() == 0)
-                return false;
-
-            count++;
-            SLEEP(100);
-        }
-        else if (n < 0)
-        {
-			QString Mes(tr("Error reading data from COM port\n"))  ;
-            err(qPrintable(Mes));
-
-            if (aggressive && sendCount.size() == 0)
-                return false;
-        }
-        else
-        {
-            tmp[n] = 0;
-            result.append(tmp);
-
-            QString tmpTrim(tmp);
-            int pos = tmpTrim.indexOf(port.getDetectedLineFeed());
-            if (pos != -1)
-                tmpTrim.remove(pos, port.getDetectedLineFeed().size());
-            QString received(tmp);
-
-            if (aggressive)
-            {
-                if (received.contains(RESPONSE_OK))
-                {
-                    if (sendCount.isEmpty()) {
-                        err(qPrintable(tr("Unexpected: list is empty (o)!")));
-                    }
-                    else
-                    {
-                        CmdResponse cmdResp = sendCount.takeFirst();
-                        diag(qPrintable(tr("GOT[%d]: '%s' for '%s' (aggressive)\n")), cmdResp.line,
-                             tmpTrim.toLocal8Bit().constData(), cmdResp.cmd.trimmed().toLocal8Bit().constData());
-						//diag("DG Buffer %d", sendCount.size());
-                        
-						emit setQueuedCommands(sendCount.size(), true);
-                    }
-                    rcvdI++;
-                    okcount++;
-                }
-                else if (received.contains(RESPONSE_ERROR))
-                {
-                    QString orig(tr("Error?"));
-                    if (sendCount.isEmpty())
-                        err(qPrintable(tr("Unexpected: list is empty (e)!")));
-                    else
-                    {
-                        CmdResponse cmdResp = sendCount.takeFirst();
-                        orig = cmdResp.cmd;
-                        diag(qPrintable(tr("GOT[%d]: '%s' for '%s' (aggressive)\n")), cmdResp.line,
-                             tmpTrim.toLocal8Bit().constData(), cmdResp.cmd.trimmed().toLocal8Bit().constData());
-						//diag("DG Buffer %d", sendCount.size());
-                        
-                        emit setQueuedCommands(sendCount.size(), true);
-                    }
-                    errorCount++;
-                    QString result;
-                    QTextStream(&result) << received << " [for " << orig << "]";
-                    emit addList(result);
-                    grblCmdErrors.append(result);
-                    rcvdI++;
-                }
-                else
-                {
-                    diag(qPrintable(tr("GOT: '%s' (aggressive)\n")), tmpTrim.trimmed().toLocal8Bit().constData());
-                    parseCoordinates(received, aggressive);
-                }
-
-                int total = 0;
-                foreach (CmdResponse cmdResp, sendCount)
-                {
-                    total += cmdResp.count;
-                }
-
-                //printf("Total out (b): %d (%d)\n", total, sendCount.size());
-                //printf("SENT:%d RCVD:%d\n", sentI, rcvdI);
-
-                if (total >= (GRBL_RX_BUFFER_SIZE - 1))
-                {
-                    //diag("DG Loop again\n");
-                    result.clear();
-                    continue;
-                }
-                else if (port.bytesAvailable())
-                {
-                    // comment out this block for more conservative approach
-                    if (!finalize && okcount > 0)
-                    {
-                        //diag("DG Leave early\n");
-                        return true;
-                    }
-
-                    result.clear();
-                    continue;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                diag(qPrintable(tr("GOT:%s\n")), tmpTrim.toLocal8Bit().constData());
-            }
-
-            if (!received.contains(RESPONSE_OK) && !received.contains(RESPONSE_ERROR))
-            {
-                if (sentReqForParserState)
-                {
-                    const QRegExp rx("\\[([\\s\\w\\.\\d]+)\\]");
-
-                    if (rx.indexIn(received, 0) != -1 && rx.captureCount() == 1)
-                    {
-                        QStringList list = rx.capturedTexts();
-                        if (list.size() == 2)
-                        {
-                            QStringList items = list.at(1).split(" ");
-                            if (items.contains("G20"))// inches
-                            {
-                                if (controlParams.useMm)
-                                    incorrectMeasurementUnits = true;
-                                else
-                                    incorrectMeasurementUnits = false;
-                            }
-                            else if (items.contains("G21"))// millimeters
-                            {
-                                if (controlParams.useMm)
-                                    incorrectMeasurementUnits = false;
-                                else
-                                    incorrectMeasurementUnits = true;
-                            }
-                            else
-                            {
-                                // not in list!
-                                incorrectMeasurementUnits = true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    parseCoordinates(received, aggressive);
-                }
-            }
-            count = 0;
-        }
-
-        SLEEP(100);
-
-        if (count > waitCount)
-        {
-            // waited too long for a response, fail
-            status = false;
-            break;
-        }
-    }
-
-    if (shutdownState.get())
-    {
-        return false;
-    }
-
-    if (status)
-    {
-        if (!aggressive)
-            SLEEP(100);
-
-        if (resetState.get())
-        {
-            QString msg(tr("Wait interrupted by user"));
-            err("%s", qPrintable(msg));
-            emit addList(msg);
-        }
-    }
-
-    if (result.contains(RESPONSE_ERROR))
-    {
-        errorCount++;
-        // skip over errors
-        //status = false;
-    }
-
-    QStringList list = QString(result).split(port.getDetectedLineFeed());
-    QStringList listToSend;
-    for (int i = 0; i < list.size(); i++)
-    {
-        if (list.at(i).length() > 0 && list.at(i) != RESPONSE_OK && !sentReqForLocation && !list.at(i).startsWith("MPos:["))
-            listToSend.append(list.at(i));
-    }
-
-    sendStatusList(listToSend);
-
-    if (resetState.get())
-    {
-        // we have been told by the user to stop.
-        status = false;
-    }
-
-    return status;
 }
 
 bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFound)
@@ -743,9 +294,9 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
     int waitCount = waitSec * 10;// multiplier depends on sleep values below
     bool status = true;
     result.clear();
-    while (!resetState.get())
+    while (!grbl.getResetState())
     {
-        int n = port.PollComportLine(tmp, BUF_SIZE);
+        int n = grbl.PollComportLine(tmp, BUF_SIZE);
         if (n == 0)
         {
             count++;
@@ -761,9 +312,9 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
             result.append(tmp);
 
             QString tmpTrim(tmp);
-            int pos = tmpTrim.indexOf(port.getDetectedLineFeed());
+            int pos = tmpTrim.indexOf(grbl.getDetectedLineFeed());
             if (pos != -1)
-                tmpTrim.remove(pos, port.getDetectedLineFeed().size());
+                tmpTrim.remove(pos, grbl.getDetectedLineFeed().size());
             diag(qPrintable(tr("GOT:%s\n")), tmpTrim.toLocal8Bit().constData());
 
             if (tmpTrim.length() > 0)
@@ -776,7 +327,7 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
                         emit addList(msg);
                         emit sendMsg(msg);
 
-                        closePort(false);
+                        grbl.closePort(false);
                     }
                     status = false;
                 }
@@ -800,7 +351,7 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
                 emit addList(msg);
                 emit sendMsg(msg);
 
-                closePort(false);
+                grbl.closePort(false);
             }
 
             status = false;
@@ -808,14 +359,14 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
         }
     }
 
-    if (shutdownState.get())
+    if (grbl.getShutdownState())
     {
         return false;
     }
 
     if (status)
     {
-        if (resetState.get())
+        if (grbl.getResetState())
         {
             QString msg(tr("Wait interrupted by user (startup)"));
             err("%s", qPrintable(msg));
@@ -825,12 +376,12 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
 
     if (result.contains(RESPONSE_ERROR))
     {
-        errorCount++;
+        grbl.incErrorCount();
         // skip over errors
         //status = false;
     }
 
-    QStringList list = QString(result).split(port.getDetectedLineFeed());
+    QStringList list = QString(result).split(grbl.getDetectedLineFeed());
     QStringList listToSend;
     for (int i = 0; i < list.size(); i++)
     {
@@ -838,187 +389,15 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
             listToSend.append(list.at(i));
     }
 
-    sendStatusList(listToSend);
+    grbl.sendStatusList(listToSend);
 
-    if (resetState.get())
+    if (grbl.getResetState())
     {
         // we have been told by the user to stop.
         status = false;
     }
 
     return status;
-}
-
-void GCode::parseCoordinates(const QString& received, bool aggressive)
-{
-    if (aggressive)
-    {
-        int ms = parseCoordTimer.elapsed();
-        if (ms < 500)
-            return;
-
-        parseCoordTimer.restart();
-    }
-
-	bool good = false;
-	int captureCount ;
-	QString state;
-    QString prepend;
-    QString append;
-    QString preamble = "([a-zA-Z]+),MPos:";
-    if (!doubleDollarFormat)
-    {
-        prepend = "\\[";
-        append = "\\]";
-        preamble = "MPos:" ;
-    }
-	QString coordRegExp;
-	QRegExp rxStateMPos;
-	QRegExp rxWPos;
-	/// 3 axis
-	QString format("(-*\\d+\\.\\d+),(-*\\d+\\.\\d+)") ;
-    int maxaxis = MAX_AXIS_COUNT, naxis ;
-    for (naxis = DEFAULT_AXIS_COUNT; naxis <= maxaxis; naxis++) {
-		if (!doubleDollarFormat)
-			captureCount = naxis ;
-		else
-			captureCount = naxis + 1 ;
-		//
-		format += ",(-*\\d+\\.\\d+)" ;
-		coordRegExp = prepend + format + append ;
-		rxStateMPos = QRegExp(preamble + coordRegExp);
-		rxWPos = QRegExp(QString("WPos:") + coordRegExp);
-		good = rxStateMPos.indexIn(received, 0) != -1
-			   && rxStateMPos.captureCount() == captureCount
-			   && rxWPos.indexIn(received, 0) != -1
-			   && rxWPos.captureCount() == naxis
-			   ;
-		// find ...
-		if (good)
-			break;
-	}
-	if (good) {  /// naxis contains number axis
-        if (numaxis <= DEFAULT_AXIS_COUNT)
-        {
-            if (naxis > DEFAULT_AXIS_COUNT)
-            {
-                QString msg = tr("Incorrect - extra axis present in hardware but options set for only 3 axes. Please fix options.");
-                emit addList(msg);
-                emit sendMsg(msg);
-            }
-        }
-        else
-        {
-            if (naxis <= DEFAULT_AXIS_COUNT)
-            {
-                QString msg = tr("Incorrect - extra axis not present in hardware but options set for > 3 axes. Please fix options.");
-                emit addList(msg);
-                emit sendMsg(msg);
-            }
-        }
-
-		numaxis = naxis;
-		QStringList list = rxStateMPos.capturedTexts();
-		int index = 1;
-
-		if (doubleDollarFormat)
-			state = list.at(index++);
-
-		machineCoord.x = list.at(index++).toFloat();
-		machineCoord.y = list.at(index++).toFloat();
-		machineCoord.z = list.at(index++).toFloat();
-        if (numaxis == MAX_AXIS_COUNT)
-            machineCoord.fourth = list.at(index++).toFloat();
-		list = rxWPos.capturedTexts();
-		workCoord.x = list.at(1).toFloat();
-		workCoord.y = list.at(2).toFloat();
-		workCoord.z = list.at(3).toFloat();
-        if (numaxis == MAX_AXIS_COUNT)
-            workCoord.fourth = list.at(4).toFloat();
-		if (state != "Run")
-			workCoord.stoppedZ = true;
-		else
-			workCoord.stoppedZ = false;
-
-		workCoord.sliderZIndex = sliderZCount;
-        if (numaxis == DEFAULT_AXIS_COUNT)
-			diag(qPrintable(tr("Decoded: State:%s MPos: %f,%f,%f WPos: %f,%f,%f\n")),
-				 qPrintable(state),
-				 machineCoord.x, machineCoord.y, machineCoord.z,
-				 workCoord.x, workCoord.y, workCoord.z
-				 );
-        else if (numaxis == MAX_AXIS_COUNT)
-			diag(qPrintable(tr("Decoded: State:%s MPos: %f,%f,%f,%f WPos: %f,%f,%f,%f\n")),
-				 qPrintable(state),
-                 machineCoord.x, machineCoord.y, machineCoord.z, machineCoord.fourth,
-                 workCoord.x, workCoord.y, workCoord.z, workCoord.fourth
-				 );
-
-		if (workCoord.z > maxZ)
-			maxZ = workCoord.z;
-
-		emit updateCoordinates(machineCoord, workCoord);
-        emit setLivePoint(workCoord.x, workCoord.y, controlParams.useMm, positionValid);
-		emit setLastState(state);
-
-		lastState = state;
-		return;
-	}
-    // TODO fix to print
-    //if (!good /*&& received.indexOf("MPos:") != -1*/)
-    //    err(qPrintable(tr("Error decoding position data! [%s]\n")), qPrintable(received));
-
-    lastState = "";
-}
-
-void GCode::sendStatusList(QStringList& listToSend)
-{
-    if (listToSend.size() > 1)
-    {
-        emit addListFull(listToSend);
-    }
-    else if (listToSend.size() == 1)
-    {
-        emit addList(listToSend.at(0));
-    }
-}
-
-// called once a second to capture any random strings that come from the controller
-void GCode::timerEvent(QTimerEvent *event)
-{
-    Q_UNUSED(event);
-
-    if (port.isPortOpen())
-    {
-        char tmp[BUF_SIZE + 1] = {0};
-        QString result;
-
-        for (int i = 0; i < 10 && !shutdownState.get() && !resetState.get(); i++)
-        {
-            int n = port.PollComport(tmp, BUF_SIZE);
-            if (n == 0)
-                break;
-
-            tmp[n] = 0;
-            result.append(tmp);
-            diag(qPrintable(tr("GOT-TE:%s\n")), tmp);
-        }
-
-        if (shutdownState.get())
-        {
-            return;
-        }
-
-        QStringList list = QString(result).split(port.getDetectedLineFeed());
-        QStringList listToSend;
-        for (int i = 0; i < list.size(); i++)
-        {
-            if (list.at(i).length() > 0 && (list.at(i) != "ok" || (list.at(i) == "ok" && abortState.get())))
-                listToSend.append(list.at(i));
-        }
-
-        sendStatusList(listToSend);
-    }
 }
 
 void GCode::sendFile(QString path)
@@ -1032,8 +411,8 @@ void GCode::sendFile(QString path)
     emit setQueuedCommands(0, false);
     grblCmdErrors.clear();
     grblFilteredCmds.clear();
-    errorCount = 0;
-    abortState.set(false);
+    grbl.clearErrorCount();
+    grbl.setAbortState(false);
     QFile file(path);
     if (file.open(QFile::ReadOnly))
     {
@@ -1049,24 +428,11 @@ void GCode::sendFile(QString path)
 
         code.seek(0);
 
-        // set here once so that it doesn't change in the middle of a file send
-        bool aggressive = controlParams.useAggressivePreload;
-        if (aggressive)
-        {
-            sendCount.clear();
-            //if (sendCount.size() == 0)
-            //{
-            //    diag("DG Buffer 0 at start\n"));
-            //}
+        grbl.initCmdSend();
 
-            emit setQueuedCommands(sendCount.size(), true);
-        }
-
-        sentI = 0;
-        rcvdI = 0;
         emit resetTimer(true);
 
-        parseCoordTimer.restart();
+        grbl.restartParseCoordTimer();
 
         int currLine = 0;
         bool xyRateSet = false;
@@ -1118,13 +484,13 @@ void GCode::sendFile(QString path)
                     bool ret = false;
                     if (outputList.size() == 1)
                     {
-                        ret = sendGcodeLocal(outputList.at(0), false, -1, aggressive, currLine + 1);
+                        ret = sendGcodeLocal(outputList.at(0), false, -1, currLine + 1);
                     }
                     else
                     {
                         foreach (QString outputLine, outputList)
                         {
-                            ret = sendGcodeLocal(outputLine, false, -1, aggressive, currLine + 1);
+                            ret = sendGcodeLocal(outputLine, false, -1, currLine + 1);
 
                             if (!ret)
                                 break;
@@ -1136,7 +502,7 @@ void GCode::sendFile(QString path)
 
                     if (!ret)
                     {
-                        abortState.set(true);
+                        grbl.setAbortState(true);
                         break;
                     }
                 }
@@ -1147,49 +513,28 @@ void GCode::sendFile(QString path)
 
             positionUpdate();
             currLine++;
-        } while ((code.atEnd() == false) && (!abortState.get()));
+        } while ((code.atEnd() == false) && (!grbl.getAbortState()));
         file.close();
 
-        if (aggressive)
-        {
-            int limitCount = 5000;
-            while (sendCount.size() > 0 && limitCount)
-            {
-                QString result;
-                waitForOk(result, controlParams.waitTime, false, false, aggressive, true);
-                SLEEP(100);
-
-                if (shutdownState.get())
-                    return;
-
-                if (abortState.get())
-                    break;
-
-                limitCount--;
-            }
-
-            if (!limitCount)
-            {
-                err(qPrintable(tr("Gave up waiting for OK\n")));
-            }
-        }
+        if (!grbl.waitForAllResponses(grblCmdErrors))
+            return;
 
         positionUpdate();
 
         emit resetTimer(false);
 
-        if (shutdownState.get())
+        if (grbl.getShutdownState())
         {
             return;
         }
 
         QString msg;
-        if (!abortState.get())
+        if (!grbl.getAbortState())
         {
             setProgress(100);
-            if (errorCount > 0)
+            if (grbl.getErrorCount() > 0)
             {
-                msg = QString(tr("Code sent successfully with %1 error(s):")).arg(QString::number(errorCount));
+                msg = QString(tr("Code sent successfully with %1 error(s):")).arg(QString::number(grbl.getErrorCount()));
                 emit sendMsg(msg);
                 emit addList(msg);
 
@@ -1229,7 +574,7 @@ void GCode::sendFile(QString path)
 
     pollPosWaitForIdle(true);
 
-    if (!resetState.get())
+    if (!grbl.getResetState())
     {
         emit stopSending();
     }
@@ -1709,39 +1054,13 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
 
 void GCode::gotoXYZFourth(QString line)
 {
-    bool queryPos = checkForGetPosStr(line);
+    bool queryPos = GrblInterface::checkForGetPosStr(line);
     if (!queryPos && controlParams.usePositionRequest
             && controlParams.positionRequestType == PREQ_ALWAYS)
         pollPosWaitForIdle(false);
 
     if (sendGcodeLocal(line))
     {
-        line = line.toUpper();
-
-        bool moveDetected = false;
-
-        QStringList list = line.split(QRegExp("[\\s]+"));
-        for (int i = 0; i < list.size(); i++)
-        {
-            QString item = getMoveAmountFromString("X", list.at(i));
-            moveDetected = item.length() > 0;
-
-            item = getMoveAmountFromString("Y", list.at(i));
-            moveDetected = item.length() > 0;
-
-            item = getMoveAmountFromString("Z", list.at(i));
-            moveDetected = item.length() > 0 ;
-            if (numaxis == MAX_AXIS_COUNT)  {
-                item = getMoveAmountFromString(QString(controlParams.fourthAxisType), list.at(i));
-				moveDetected = item.length() > 0;
-			}
-        }
-
-        if (!moveDetected)
-        {
-            //emit addList("No movement expected for command.");
-        }
-
         if (!queryPos)
             pollPosWaitForIdle(false);
     }
@@ -1783,7 +1102,7 @@ void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj,
     SendJog(cmd, absoluteAfterAxisAdj);
 
     if (axis == 'Z')
-        sliderZCount = sZC;
+        grbl.setSliderZCount(sZC);
 
     emit adjustedAxis();
 }
@@ -1815,11 +1134,11 @@ void GCode::setResponseWait(ControlParams controlParamsIn)
 
     controlParams = controlParamsIn;
 
+    grbl.setParams(controlParamsIn);
+
     controlParams.useMm = oldMm;
 
-    port.setCharSendDelayMs(controlParams.charSendDelayMs);
-
-    if ((oldMm != controlParamsIn.useMm) && isPortOpen() && doubleDollarFormat)
+    if ((oldMm != controlParamsIn.useMm) && grbl.isPortOpen() && grbl.isDoubleDollarFormat())
     {
         if (controlParamsIn.useMm)
         {
@@ -1832,14 +1151,9 @@ void GCode::setResponseWait(ControlParams controlParamsIn)
     }
 
     controlParams.useMm = controlParamsIn.useMm;
-    numaxis = controlParams.useFourAxis ? MAX_AXIS_COUNT : DEFAULT_AXIS_COUNT;
+    grbl.setNumAxis(controlParams.useFourAxis ? MAX_AXIS_COUNT : DEFAULT_AXIS_COUNT);
 
     setUnitsTypeDisplay(controlParams.useMm);
-}
-
-int GCode::getSettingsItemCount()
-{
-    return settingsItemCount.get();
 }
 
 // 0.8c and above only!
@@ -1847,7 +1161,7 @@ void GCode::checkAndSetCorrectMeasurementUnits()
 {
     sendGcodeLocal(REQUEST_PARSER_STATE_V08c, false);
 
-    if (incorrectMeasurementUnits)
+    if (grbl.isIncorrectMeasurementUnits())
     {
         if (controlParams.useMm)
         {
@@ -1859,14 +1173,14 @@ void GCode::checkAndSetCorrectMeasurementUnits()
             emit addList(tr("Options specify use inches but Grbl parser set for mm. Fixing.") );
             setConfigureInchesMode(true);
         }
-        incorrectMeasurementUnits = false;// hope this is ok to do here
+        grbl.clearIncorrectMeasurementUnits();// hope this is ok to do here
         positionUpdate(true);
     }
     else
     {
         sendGcodeLocal(SETTINGS_COMMAND_V08c);
 
-        if (incorrectLcdDisplayUnits)
+        if (grbl.isIncorrectLcdDisplayUnits())
         {
             if (controlParams.useMm)
             {
@@ -1879,7 +1193,7 @@ void GCode::checkAndSetCorrectMeasurementUnits()
                 setConfigureInchesMode(false);
             }
         }
-        incorrectLcdDisplayUnits = false;
+        grbl.clearIncorrectLcdDisplayUnits();
     }
 }
 
@@ -1921,17 +1235,6 @@ void GCode::setUnitsTypeDisplay(bool millimeters)
     }
 }
 
-void GCode::clearToHome()
-{
-    maxZ = 0;
-    motionOccurred = false;
-}
-
-int GCode:: getNumaxis()
-{
-	return numaxis;
-}
-
 GCode::PosReqStatus GCode::positionUpdate(bool forceIfEnabled /* = false */)
 {
     if (controlParams.usePositionRequest)
@@ -1957,15 +1260,3 @@ GCode::PosReqStatus GCode::positionUpdate(bool forceIfEnabled /* = false */)
     return POS_REQ_RESULT_UNAVAILABLE;
 }
 
-bool GCode::checkForGetPosStr(QString& line)
-{
-    return (!line.compare(REQUEST_CURRENT_POS)
-        || (line.startsWith(REQUEST_CURRENT_POS) && line.endsWith('\r') && line.length() == 2));
-}
-
-void GCode::setLivenessState(bool valid)
-{
-    positionValid = valid;
-    emit setVisualLivenessCurrPos(valid);
-    emit setLcdState(valid);
-}

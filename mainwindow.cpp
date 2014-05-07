@@ -27,7 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
     sliderZCount(0),
     scrollRequireMove(true), scrollPressed(false),
     queuedCommandsStarved(false), lastQueueCount(0), queuedCommandState(QCS_OK),
-    lastLcdStateValid(true)
+    lastLcdStateValid(true),
+    gcode(grbl)
 {
     // Setup our application information to be used by QSettings
     QCoreApplication::setOrganizationName(COMPANY_NAME);
@@ -106,8 +107,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboStep,SIGNAL(currentIndexChanged(QString)),this,SLOT(comboStepChanged(QString)));
 
     connect(this, SIGNAL(sendFile(QString)), &gcode, SLOT(sendFile(QString)));
-    connect(this, SIGNAL(openPort(QString,QString)), &gcode, SLOT(openPort(QString,QString)));
-    connect(this, SIGNAL(closePort(bool)), &gcode, SLOT(closePort(bool)));
     connect(this, SIGNAL(sendGcode(QString)), &gcode, SLOT(sendGcode(QString)));
     connect(this, SIGNAL(gotoXYZFourth(QString)), &gcode, SLOT(gotoXYZFourth(QString)));
     connect(this, SIGNAL(axisAdj(char, float, bool, bool, int)), &gcode, SLOT(axisAdj(char, float, bool, bool, int)));
@@ -121,10 +120,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sendGrblUnlock()), &gcode, SLOT(sendGrblUnlock()));
     connect(this, SIGNAL(goToHome()), &gcode, SLOT(goToHome()));
     connect(this, SIGNAL(setItems(QList<PosItem>)), ui->wgtVisualizer, SLOT(setItems(QList<PosItem>)));
+
+    connect(this, SIGNAL(openPort(QString,QString)), &grbl, SLOT(openPort(QString,QString)));
+    connect(this, SIGNAL(closePort(bool)), &grbl, SLOT(closePort(bool)));
     
     connect(&gcode, SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
-    connect(&gcode, SIGNAL(portIsClosed(bool)), this, SLOT(portIsClosed(bool)));
-    connect(&gcode, SIGNAL(portIsOpen(bool)), this, SLOT(portIsOpen(bool)));
     connect(&gcode, SIGNAL(addList(QString)),this,SLOT(receiveList(QString)));
     connect(&gcode, SIGNAL(addListFull(QStringList)),this,SLOT(receiveListFull(QStringList)));
     connect(&gcode, SIGNAL(addListOut(QString)),this,SLOT(receiveListOut(QString)));
@@ -135,14 +135,22 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&gcode, SIGNAL(adjustedAxis()), this, SLOT(adjustedAxis()));
     connect(&gcode, SIGNAL(resetTimer(bool)), &runtimeTimer, SLOT(resetTimer(bool)));
     connect(&gcode, SIGNAL(enableGrblDialogButton()), this, SLOT(enableGrblDialogButton()));
-    connect(&gcode, SIGNAL(updateCoordinates(Coord3D,Coord3D)), this, SLOT(updateCoordinates(Coord3D,Coord3D)));
-    connect(&gcode, SIGNAL(setLastState(QString)), ui->outputLastState, SLOT(setText(QString)));
     connect(&gcode, SIGNAL(setUnitsWork(QString)), ui->outputUnitsWork, SLOT(setText(QString)));
     connect(&gcode, SIGNAL(setUnitsMachine(QString)), ui->outputUnitsMachine, SLOT(setText(QString)));
-    connect(&gcode, SIGNAL(setLivePoint(double, double, bool, bool)), ui->wgtVisualizer, SLOT(setLivePoint(double, double, bool, bool)));
-    connect(&gcode, SIGNAL(setVisualLivenessCurrPos(bool)), ui->wgtVisualizer, SLOT(setVisualLivenessCurrPos(bool)));
     connect(&gcode, SIGNAL(setVisCurrLine(int)), ui->wgtVisualizer, SLOT(setVisCurrLine(int)));
-    connect(&gcode, SIGNAL(setLcdState(bool)), this, SLOT(setLcdState(bool)));
+
+    connect(&grbl, SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
+    connect(&grbl, SIGNAL(addList(QString)),this,SLOT(receiveList(QString)));
+    connect(&grbl, SIGNAL(addListFull(QStringList)),this,SLOT(receiveListFull(QStringList)));
+    connect(&grbl, SIGNAL(addListOut(QString)),this,SLOT(receiveListOut(QString)));
+    connect(&grbl, SIGNAL(portIsClosed(bool)), this, SLOT(portIsClosed(bool)));
+    connect(&grbl, SIGNAL(portIsOpen(bool)), this, SLOT(portIsOpen(bool)));
+    connect(&grbl, SIGNAL(setQueuedCommands(int, bool)), this, SLOT(setQueuedCommands(int, bool)));
+    connect(&grbl, SIGNAL(updateCoordinates(Coord3D,Coord3D)), this, SLOT(updateCoordinates(Coord3D,Coord3D)));
+    connect(&grbl, SIGNAL(setLastState(QString)), ui->outputLastState, SLOT(setText(QString)));
+    connect(&grbl, SIGNAL(setLivePoint(double, double, bool, bool)), ui->wgtVisualizer, SLOT(setLivePoint(double, double, bool, bool)));
+    connect(&grbl, SIGNAL(setVisualLivenessCurrPos(bool)), ui->wgtVisualizer, SLOT(setVisualLivenessCurrPos(bool)));
+    connect(&grbl, SIGNAL(setLcdState(bool)), this, SLOT(setLcdState(bool)));
 
     connect(&runtimeTimer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
 
@@ -256,6 +264,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
 
     QSettings settings;
+    /*
     QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "true").value<QString>();
     controlParams.useAggressivePreload = useAggrPreload == "true";
 
@@ -276,6 +285,7 @@ MainWindow::MainWindow(QWidget *parent) :
         controlParams.useAggressivePreload = true;
         settings.setValue(SETTINGS_USE_AGGRESSIVE_PRELOAD, controlParams.useAggressivePreload);
     }
+    */
 
     promptedAggrPreload = true;
 
@@ -1056,8 +1066,8 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     controlParams.zJogRate = settings.value(SETTINGS_Z_JOG_RATE, DEFAULT_Z_JOG_RATE).value<double>();
     QString useMmManualCmds = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS, "true").value<QString>();
     controlParams.useMm = useMmManualCmds == "true";
-    QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "true").value<QString>();
-    controlParams.useAggressivePreload = useAggrPreload == "true";
+    //QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "true").value<QString>();
+    //controlParams.useAggressivePreload = useAggrPreload == "true";
     QString waitForJogToComplete = settings.value(SETTINGS_WAIT_FOR_JOG_TO_COMPLETE, "true").value<QString>();
     controlParams.waitForJogToComplete = waitForJogToComplete == "true";
 

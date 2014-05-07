@@ -188,6 +188,7 @@ private:
     //FileSender fileSender;
     //QThread fileSenderThread;
     GCode gcode;
+    GrblInterface grbl;
     QThread gcodeThread;
 
     Timer runtimeTimer;

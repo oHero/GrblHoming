@@ -18,7 +18,6 @@ public:
     bool zRateLimit;
     double zRateLimitAmount;
     double xyRateAmount;
-    bool useAggressivePreload;
     bool filterFileCommands;
     bool reducePrecision;
     int grblLineBufferLen;
