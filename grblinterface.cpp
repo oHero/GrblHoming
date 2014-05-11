@@ -1,8 +1,9 @@
-#include "grblinterface.h"
 #include <QObject>
+#include "grblinterface.h"
 
-GrblInterface::GrblInterface()
-  : errorCount(0), doubleDollarFormat(false),
+
+GrblInterface::GrblInterface(RS232& rs)
+  : port(rs), errorCount(0), doubleDollarFormat(false),
     incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
     maxZ(0), motionOccurred(false),
     sliderZCount(0),
@@ -164,31 +165,6 @@ void GrblInterface::initCmdSend()
     //}
 
     emit setQueuedCommands(sendCount.size(), true);
-}
-
-bool GrblInterface::waitForAllResponses(QStringList& grblCmdErr)
-{
-    int limitCount = 5000;
-    while (sendCount.size() > 0 && limitCount)
-    {
-        QString result;
-        waitForOk(result, controlParams.waitTime, false, false, true, grblCmdErr);
-        SLEEP(100);
-
-        if (shutdownState.get())
-            return false;
-
-        if (abortState.get())
-            break;
-
-        limitCount--;
-    }
-
-    if (!limitCount)
-    {
-        err(qPrintable(tr("Gave up waiting for OK\n")));
-    }
-    return true;
 }
 
 bool GrblInterface::waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool finalize, QStringList& grblCmdErr)
@@ -539,6 +515,31 @@ void GrblInterface::parseCoordinates(const QString& received)
     //    err(qPrintable(tr("Error decoding position data! [%s]\n")), qPrintable(received));
 
     lastState = "";
+}
+
+bool GrblInterface::waitForAllResponses(QStringList& grblCmdErr)
+{
+    int limitCount = 5000;
+    while (sendCount.size() > 0 && limitCount)
+    {
+        QString result;
+        waitForOk(result, controlParams.waitTime, false, false, true, grblCmdErr);
+        SLEEP(100);
+
+        if (shutdownState.get())
+            return false;
+
+        if (abortState.get())
+            break;
+
+        limitCount--;
+    }
+
+    if (!limitCount)
+    {
+        err(qPrintable(tr("Gave up waiting for OK\n")));
+    }
+    return true;
 }
 
 // static

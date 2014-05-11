@@ -3,6 +3,7 @@
 #include "log4qtdef.h"
 
 #include <QString>
+#include <QStringList>
 #include <QFile>
 #include <QThread>
 #include <QTextStream>
@@ -30,7 +31,7 @@ class GrblInterface : public QObject
     Q_OBJECT
 
 public:
-    GrblInterface();
+    GrblInterface(RS232& rs);
     bool sendWithBlock(QString line, QString& result, QStringList& grblCmdErr, bool recordResponseOnFail = false, int waitSec = -1, int currLine = 0);
     void initCmdSend();
     bool waitForAllResponses(QStringList& grblCmdErr);
@@ -101,7 +102,7 @@ private:
 
 
 private:
-    RS232 port;
+    RS232& port;
     ControlParams controlParams;
     AtomicIntBool abortState;
     AtomicIntBool resetState;

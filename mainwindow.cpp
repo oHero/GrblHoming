@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
    // open_button_text(tr(OPEN_BUTTON_TEXT)),
    // close_button_text(tr(CLOSE_BUTTON_TEXT)),
+    grbl(rs232),
+    gcode(grbl),
     open_button_text(tr("Open")),
     close_button_text(tr("Close / Reset")),
     absoluteAfterAxisAdj(false),
@@ -27,8 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     sliderZCount(0),
     scrollRequireMove(true), scrollPressed(false),
     queuedCommandsStarved(false), lastQueueCount(0), queuedCommandState(QCS_OK),
-    lastLcdStateValid(true),
-    gcode(grbl)
+    lastLcdStateValid(true)
 {
     // Setup our application information to be used by QSettings
     QCoreApplication::setOrganizationName(COMPANY_NAME);

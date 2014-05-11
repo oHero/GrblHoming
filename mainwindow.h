@@ -187,8 +187,9 @@ private:
     Ui::MainWindow *ui;
     //FileSender fileSender;
     //QThread fileSenderThread;
-    GCode gcode;
+    RS232 rs232;
     GrblInterface grbl;
+    GCode gcode;
     QThread gcodeThread;
 
     Timer runtimeTimer;

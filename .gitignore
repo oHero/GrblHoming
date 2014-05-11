@@ -17,3 +17,6 @@ moc_*.cpp
 qrc_*.cpp
 *.stash
 GrblController-local.iss
+GrblControllerTests-build-mingw-Release
+GrblControllerTests-build-mingw-Debug
+GrblControllerTests/GrblControllerTests.pro.user

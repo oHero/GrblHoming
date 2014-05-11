@@ -11,7 +11,6 @@
 #define RS232_H
 
 #include <QtGlobal>
-#include <QMessageBox>
 
 #include <stdio.h>
 #include <string.h>
@@ -34,8 +33,13 @@
 #endif
 #endif
 
+#ifndef QTTEST
+#include <QMessageBox>
 #include <qextserialport.h>
 #include <qextserialenumerator.h>
+#else
+#include <QStringList>
+#endif
 
 #include "definitions.h"
 
@@ -65,11 +69,18 @@ public:
     void setCharSendDelayMs(int charSendDelayMs);
 
 private:
+#ifndef QTTEST
     QextSerialPort *port;
     char detectedEOL;
     QString detectedLineFeed;
     int charSendDelayMs;
+#else
+    bool isOpen;
+    QStringList responseList;
 
+public:
+    void setResponseList(const QStringList& responseList);
+#endif
 };
 
 
