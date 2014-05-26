@@ -2,6 +2,7 @@
 #include <QtTest>
 #include "tst_positemtest.h"
 #include "tst_preloadtest.h"
+#include "tst_grblcontroltest.h"
 enum GC_LOG_TYPES
 {
     LOG_DEBUG_TYPE = 1,
@@ -15,14 +16,22 @@ void logit(GC_LOG_TYPES type, const char *str, va_list args);
 int main(int argc, char** argv)
 {
    int status = 0;
+
    {
       PreloadTest tc;
       status |= QTest::qExec(&tc, argc, argv);
    }
+   /*
    {
       PositemTest tc;
       status |= QTest::qExec(&tc, argc, argv);
    }
+
+   {
+      GrblControlTest tc;
+      status |= QTest::qExec(&tc, argc, argv);
+   }
+   */
    return status;
 }
 
@@ -101,19 +110,19 @@ void logit(GC_LOG_TYPES type, const char *str, va_list args)
     switch (type)
     {
         case LOG_STATUS_TYPE:
-            printf("%s", buf);
+            printf("STATUS:%s\n", buf);
             break;
         case LOG_DEBUG_TYPE:
-            printf("%s", buf);
+            printf("DEBUG:%s\n", buf);
             break;
         case LOG_ERROR_TYPE:
-            printf("%s", buf);
+            printf("ERROR:%s\n", buf);
             break;
         case LOG_WARN_TYPE:
-            printf("%s", buf);
+            printf("WARN:%s\n", buf);
             break;
         case LOG_INFO_TYPE:
-            printf("%s", buf);
+            printf("INFO:%s\n", buf);
             break;
     }
 }

@@ -75,11 +75,26 @@ private:
     QString detectedLineFeed;
     int charSendDelayMs;
 #else
+    class ItemTimed
+    {
+    public:
+        ItemTimed(QString i, int t) : item(i), timeDelayMs(t), haveCmd(false) {}
+        QString item;
+        int timeDelayMs;
+        bool haveCmd;
+    };
+
     bool isOpen;
-    QStringList responseList;
+    QList<ItemTimed> responseList;
+    QTime responseTimer;
+    int cmdCount;
 
 public:
-    void setResponseList(const QStringList& responseList);
+    void addResponseListItem(const QString item, int timeDelayMs = -1);
+    void startClock();
+private:
+    int pollTest(char *buf, int size);
+
 #endif
 };
 

@@ -207,7 +207,7 @@ void GCode::sendGcodeAndGetResult(int id, QString line)
 
     emit sendMsg("");
     grbl.setResetState(false);
-    if (!grbl.sendWithBlock(line, result, grblCmdErrors, false, SHORT_WAIT_SEC))
+    if (!grbl.sendCmd(line, result, grblCmdErrors, false, SHORT_WAIT_SEC))
         result.clear();
 
     emit gcodeResult(id, result);
@@ -221,7 +221,7 @@ bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */
     sendMsg("");
     grbl.setResetState(false);
 
-    bool ret = grbl.sendWithBlock(line, result, grblCmdErrors, recordResponseOnFail, waitSec, currLine);
+    bool ret = grbl.sendCmd(line, result, grblCmdErrors, recordResponseOnFail, waitSec, currLine);
     if (grbl.getShutdownState())
         return false;
 

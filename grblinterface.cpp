@@ -14,7 +14,7 @@ GrblInterface::GrblInterface(RS232& rs)
   startTimer(1000);
 }
 
-bool GrblInterface::sendWithBlock(QString line, QString& result, QStringList& grblCmdErr, bool recordResponseOnFail, int waitSec, int currLine /* = 0 */)
+bool GrblInterface::sendCmd(QString line, QString& result, QStringList& grblCmdErr, bool recordResponseOnFail, int waitSec, int currLine /* = 0 */)
 {
     if (!port.isPortOpen())
     {
@@ -80,7 +80,22 @@ bool GrblInterface::sendWithBlock(QString line, QString& result, QStringList& gr
     else
         diag(qPrintable(tr("SENDING[%d]: %s\n")), currLine, buf);
 
+    emit setQueuedCommands(sendCount.size(), true);
+
     int waitSecActual = waitSec == -1 ? controlParams.waitTime : waitSec;
+
+    while (!isGrblBufHaveRoom() || port.bytesAvailable())
+    {
+        QString result;
+        QStringList grblCmdErr;
+        bool sentReqForLocation = false;
+        bool sentReqForParserState = false;
+        bool finalize = false;
+        if (!waitForResponses(result, waitSecActual, sentReqForLocation, sentReqForParserState, finalize, grblCmdErr))
+        {
+            return false;
+        }
+    }
 
     if (ctrlX)
         sendCount.append(CmdResponse("(CTRL-X)", line.length(), currLine));
@@ -89,9 +104,7 @@ bool GrblInterface::sendWithBlock(QString line, QString& result, QStringList& gr
 
     //diag("DG Buffer Add %d", sendCount.size());
 
-    emit setQueuedCommands(sendCount.size(), true);
-
-    waitForOk(result, waitSecActual, false, false, false, grblCmdErr);
+    //waitForOk(result, waitSecActual, false, false, false, grblCmdErr);
 
     if (shutdownState.get())
         return false;
@@ -106,6 +119,7 @@ bool GrblInterface::sendWithBlock(QString line, QString& result, QStringList& gr
     }
     else
     {
+        /*
         if (!waitForOk(result, waitSecActual, sentReqForLocation, sentReqForParserState, false, grblCmdErr))
         {
             diag(qPrintable(tr("WAITFOROK FAILED\n")));
@@ -152,6 +166,7 @@ bool GrblInterface::sendWithBlock(QString line, QString& result, QStringList& gr
                 }
             }
         }
+        */
     }
     return true;
 }
@@ -167,35 +182,9 @@ void GrblInterface::initCmdSend()
     emit setQueuedCommands(sendCount.size(), true);
 }
 
-bool GrblInterface::waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool finalize, QStringList& grblCmdErr)
+bool GrblInterface::waitForResponses(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool finalize, QStringList& grblCmdErr)
 {
     int okcount = 0;
-
-    //if (!port.bytesAvailable()) //more conservative code
-    if (!finalize || !port.bytesAvailable())
-    {
-        int total = 0;
-        bool haveWait = false;
-        foreach (CmdResponse cmdResp, sendCount)
-        {
-            total += cmdResp.count;
-            if (cmdResp.waitForMe)
-            {
-                haveWait = true;
-            }
-        }
-
-        //printf("Total out (a): %d (%d) (%d)\n", total, sendCount.size(), haveWait);
-
-        if (!haveWait)
-        {
-            if (total < (GRBL_RX_BUFFER_SIZE - 1))
-            {
-                return true;
-            }
-        }
-    }
-
     char tmp[BUF_SIZE + 1] = {0};
     int count = 0;
     int waitCount = waitSec * 10;// multiplier depends on sleep values below
@@ -523,7 +512,7 @@ bool GrblInterface::waitForAllResponses(QStringList& grblCmdErr)
     while (sendCount.size() > 0 && limitCount)
     {
         QString result;
-        waitForOk(result, controlParams.waitTime, false, false, true, grblCmdErr);
+        waitForResponses(result, controlParams.waitTime, false, false, true, grblCmdErr);
         SLEEP(100);
 
         if (shutdownState.get())
@@ -817,3 +806,49 @@ void GrblInterface::restartParseCoordTimer()
 {
     parseCoordTimer.restart();
 }
+
+bool GrblInterface::isGrblBufHaveRoom()
+{
+    //if (!port.bytesAvailable()) //more conservative code
+    //if (!finalize || !port.bytesAvailable())
+
+    int total = 0;
+    bool haveWait = false;
+    foreach (CmdResponse cmdResp, sendCount)
+    {
+        total += cmdResp.count;
+        if (cmdResp.waitForMe)
+        {
+            haveWait = true;
+        }
+    }
+
+    //printf("Total out (a): %d (%d) (%d)\n", total, sendCount.size(), haveWait);
+
+    if (!haveWait)
+    {
+        if (total < (GRBL_RX_BUFFER_SIZE - 1))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool GrblInterface::waitForAllResponses(int waitSec)
+{
+    while (!sendCount.isEmpty())
+    {
+        QString result;
+        QStringList grblCmdErr;
+        bool sentReqForLocation = false;
+        bool sentReqForParserState = false;
+        bool finalize = false;
+        if (!waitForResponses(result, waitSec, sentReqForLocation, sentReqForParserState, finalize, grblCmdErr))
+            return false;
+    }
+
+    return true;
+}
+

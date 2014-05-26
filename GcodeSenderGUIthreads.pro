@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     pointitem.cpp \
     controlparams.cpp \
     grblinterface.cpp \
-    cmdresponse.cpp
+    cmdresponse.cpp \
+    grblcontrol.cpp
 
 HEADERS  += mainwindow.h \
     rs232.h \
@@ -58,7 +59,8 @@ HEADERS  += mainwindow.h \
     controlparams.h \
     version.h \
     grblinterface.h \
-    cmdresponse.h
+    cmdresponse.h \
+    grblcontrol.h
 
 FORMS    += mainwindow.ui \
     options.ui \

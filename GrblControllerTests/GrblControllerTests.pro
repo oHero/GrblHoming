@@ -24,7 +24,9 @@ SOURCES += tst_preloadtest.cpp \
     ../controlparams.cpp \
     ../atomicintbool.cpp \
     ../cmdresponse.cpp \
-    ../positem.cpp
+    ../positem.cpp \
+    ../grblcontrol.cpp \
+    tst_grblcontroltest.cpp
 
 DEFINES += QTTEST=1
 
@@ -32,3 +34,6 @@ HEADERS += \
     tst_positemtest.h \
     tst_preloadtest.h \
     ../grblinterface.h \
+    ../grblcontrol.h \
+    tst_grblcontroltest.h \
+    ../rs232.h

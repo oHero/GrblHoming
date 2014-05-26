@@ -32,9 +32,10 @@ public slots:
     void setVisualLivenessCurrPos(bool isLiveCP) {}
 
 private Q_SLOTS:
-    void testCaseSuccessOpenPort();
-    void testCaseFailOpenPort();
-    void testCaseSend1();
+    //void testCaseSuccessOpenPort();
+    //void testCaseFailOpenPort();
+    //void testCaseSend1();
+    void testCaseFillSendBuf();
 
 private:
     //RS232 mock;

@@ -32,7 +32,10 @@ class GrblInterface : public QObject
 
 public:
     GrblInterface(RS232& rs);
-    bool sendWithBlock(QString line, QString& result, QStringList& grblCmdErr, bool recordResponseOnFail = false, int waitSec = -1, int currLine = 0);
+    bool sendCmd(QString line, QString& result, QStringList& grblCmdErr, bool recordResponseOnFail = false, int waitSec = -1, int currLine = 0);
+    bool waitForAllResponses(int waitSec);
+    bool isGrblBufHaveRoom();
+
     void initCmdSend();
     bool waitForAllResponses(QStringList& grblCmdErr);
     bool isPortOpen();
@@ -97,7 +100,7 @@ protected:
     void timerEvent(QTimerEvent *event);
 
 private:
-    bool waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool finalize, QStringList& grblCmdErr);
+    bool waitForResponses(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool finalize, QStringList& grblCmdErr);
     void parseCoordinates(const QString& received);
 
 

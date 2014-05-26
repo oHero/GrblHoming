@@ -9,6 +9,7 @@ PreloadTest::PreloadTest()
 }
 
 //--------------- tests --------------------------
+/*
 void PreloadTest::testCaseSuccessOpenPort()
 {
     RS232 mock;
@@ -41,9 +42,7 @@ void PreloadTest::testCaseSend1()
 
     QVERIFY2(portOpen, "Failure");
 
-    QStringList responseList;
-    responseList.append("GRBL 0.84");
-    mock.setResponseList(responseList);
+    mock.addResponseListItem("GRBL 0.84");
 
     QString result;
     QStringList grblCmdErr;
@@ -52,6 +51,44 @@ void PreloadTest::testCaseSend1()
     bool status = grbl.sendWithBlock("\r\n", result, grblCmdErr, recordResponseOnFail, waitSec, true);
     QVERIFY2(status, "Failure");
     QVERIFY2(result.length() > 0, "Failure");
+}
+*/
+void PreloadTest::testCaseFillSendBuf()
+{
+    RS232 mock;
+    GrblInterface grbl(mock);
+    connectTo(grbl);
+
+    const int itemCount = 10;
+
+    bool result = mock.OpenComport("a", "b");
+    QVERIFY2(result, "Failed opening port");
+
+    mock.addResponseListItem("ok\n", 500);
+    mock.addResponseListItem("ok\n", 500);
+    mock.addResponseListItem("ok\n", 500);
+    mock.addResponseListItem("ok\n", 500);
+    mock.addResponseListItem("ok\n", 1000);
+
+    mock.addResponseListItem("ok\n", 1000);
+    mock.addResponseListItem("ok\n", 1000);
+    mock.addResponseListItem("ok\n", 1000);
+    mock.addResponseListItem("ok\n", 1000);
+    mock.addResponseListItem("ok\n", 1000);
+
+    mock.startClock();
+
+
+    for (int i = 0; i < itemCount; i++)
+    {
+        QString result;
+        QStringList grblCmdErr;
+        QVERIFY2(grbl.sendCmd(QString("a%1---------------------------------").arg(i), result, grblCmdErr, false, 1, i + 1),
+                 QString("Failed sending command for position %1").arg(i).toLatin1().constData());
+    }
+
+//    result = grbl.waitForAllResponses(1);
+    QVERIFY2(result, "Failed waiting for commands");
 }
 
 //-------------- private ---------------------------
