@@ -42,7 +42,8 @@ public:
     void clearToHome();
     bool sendToPort(const char *buf);
     void resetPort();
-    int PollComportLine(char *buf, int size);
+    bool haveData();
+    int getLine(char *buf, const int bufSize);
     QString getDetectedLineFeed();
     void setParams(ControlParams controlParamsIn);
     void setDoubleDollarFormat(bool isDD);

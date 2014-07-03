@@ -304,18 +304,14 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
     result.clear();
     while (!grbl.getResetState())
     {
-        int n = grbl.PollComportLine(tmp, BUF_SIZE);
-        if (n == 0)
+        if (!grbl.haveData())
         {
             count++;
             SLEEP(100);
         }
-        else if (n < 0)
-        {
-            err(qPrintable(tr("Error reading data from COM port\n")) );
-        }
         else
         {
+            int n = grbl.getLine(tmp, BUF_SIZE);
             tmp[n] = 0;
             result.append(tmp);
 

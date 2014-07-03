@@ -8,11 +8,15 @@
  ****************************************************************/
 
 #include "rs232.h"
-#include <QObject>
 
 RS232::RS232()
-    : port(NULL), detectedEOL(0), charSendDelayMs(DEFAULT_CHAR_SEND_DELAY_MS)
+    : port(NULL), detectedEOL(0), charSendDelayMs(DEFAULT_CHAR_SEND_DELAY_MS), detectedLineFeedSize(0)
 {
+}
+
+RS232::~RS232()
+{
+    CloseComport();
 }
 
 bool RS232::OpenComport(QString commPortStr, QString baudRate)
@@ -46,120 +50,25 @@ bool RS232::OpenComport(QString commPortStr, QString baudRate)
 
     PortSettings settings = {baud, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
 
-    port = new QextSerialPort(commPortStr, settings, QextSerialPort::Polling);
+    port = new QextSerialPort(commPortStr, settings);// default is event driven, alternate:, QextSerialPort::Polling);
+
+    connect(port, SIGNAL(readyRead()), this, SLOT(onDataAvailable()));
 
     port->open(QIODevice::ReadWrite);
 
     return port->isOpen();
 }
 
-
-int RS232::PollComport(char *buf, int size)
+bool RS232::SendBuf(const char *buf, int size)
 {
     if (port == NULL || !port->isOpen())
-        return 0;
-
-    int n = port->bytesAvailable();
-    if (!n)
-        return 0;
-
-    n = port->read(buf, size);
-    return(n);
-}
-
-// This is different than QIoDevice.readline() - this method only returns data if it has a full line in the
-// input buffer by peeking at the buffer. It never removes items unless it can remove a full line.
-int RS232::PollComportLine(char *buf, int size)
-{
-    if (port == NULL || !port->isOpen())
-        return 0;
-
-    int n = port->bytesAvailable();
-    if (!n)
-        return 0;
-
-    n = port->peek(buf, size);
-    if (n <= 0)
-        return n;
-
-    //printf("PEEK: %d out of %d\n", n, size);
-    if (detectedEOL == 0)
-    {
-        // algorithm assumes we received both eol chars if there are two in this peek
-        int pos = 0;
-        char firstEOL = 0;
-        char secondEOL = 0;
-        for (int i = 0; i < n; i++)
-        {
-            char b = buf[i];
-            if (b == '\n' || b == '\r')
-            {
-                if (firstEOL == 0)
-                {
-                    firstEOL = b;
-                    pos = i;
-                }
-                else if ((pos + 1) == i)
-                {
-                    secondEOL = b;
-                    break;
-                }
-                else
-                    break;
-            }
-        }
-
-        if (firstEOL != 0)
-        {
-            if (secondEOL != 0)
-            {
-                detectedEOL = secondEOL;
-                detectedLineFeed = firstEOL;
-                detectedLineFeed += secondEOL;
-            }
-            else
-            {
-                detectedEOL = firstEOL;
-                detectedLineFeed = firstEOL;
-            }
-        }
-    }
-
-    int toRead = 0;
-    if (detectedEOL)
-    {
-        for (int i = 0; i < n; i++)
-        {
-            char b = buf[i];
-            if (b == detectedEOL)
-            {
-                toRead = i + 1;
-                break;
-            }
-        }
-    }
-
-    // let's hope the serial subsystem's read buffer is big enough to find a linefeed
-    if (!toRead)
-    {
-        return 0;
-    }
-
-    n = port->read(buf, toRead);
-
-    return n;
-}
-
-int RS232::SendBuf(const char *buf, int size)
-{
-    if (port == NULL || !port->isOpen())
-        return 0;
+        return false;
 /// LETARTARE  for test
 //err(buf) ;
     if (size <= 0)
     {
         err( qPrintable(QObject::tr("Unexpected: Told to send %d bytes\n")), size) ;
-        return 1;
+        return false;
     }
 
     char b[300] = {0};
@@ -184,12 +93,13 @@ int RS232::SendBuf(const char *buf, int size)
     for (int i = 0; i < size; i++)
     {
         result = port->write(&buf[i], 1);
+        /* only applicable if port opened in poll mode
         if (result == 0)
         {
             err("Unable to write bytes to port probably due to outgoing queue full. Write data lost!");
             break;
         }
-        else if (result == -1)
+        else */ if (result < 0)
         {
             err("Error writing to port. Write data lost!");
             result = 0;
@@ -231,7 +141,7 @@ int RS232::SendBuf(const char *buf, int size)
         result = 0;
     }
 #endif
-    return result;
+    return result >= 0;
 }
 
 
@@ -251,6 +161,7 @@ void RS232::Reset() //still to test
         port->reset();
 }
 
+/*
 void RS232::flush()
 {
     int n=1;
@@ -259,6 +170,7 @@ void RS232::flush()
     while (n > 0)
         n = PollComport(buf,255);
 }
+*/
 
 bool RS232::isPortOpen()
 {
@@ -273,13 +185,96 @@ QString RS232::getDetectedLineFeed()
     return detectedLineFeed;
 }
 
-int RS232::bytesAvailable()
+bool RS232::haveData()
 {
-    int n = port->bytesAvailable();
-    return n;
+    return responses.size() > 0;
+}
+
+int RS232::getLine(char *buf, const int bufSize)
+{
+    if (bufSize == 0)
+        return 0;
+
+    if (responses.isEmpty())
+    {
+        warn("Our reponse list is empty. Should call haveData before calling getLine");
+        return 0;
+    }
+
+    QString s = responses.takeFirst();
+    int sz = qMin(bufSize, s.size());
+    if (s.size() > bufSize)
+        warn("Get line lost data because buffer size too small (Buf size:%d) (Item size:%d)\n", bufSize, s.size());
+    memcpy(buf, s.toAscii().constData(), sz);
+    return sz;
 }
 
 void RS232::setCharSendDelayMs(int csd)
 {
     charSendDelayMs = csd;
+}
+
+void RS232::onDataAvailable()
+{
+    receivedData.append(port->readAll());
+
+    if (detectedEOL == 0)
+    {
+        int pos = 0;
+        char firstEOL = 0;
+        char secondEOL = 0;
+        for (int i = 0; i < receivedData.size(); i++)
+        {
+            char b = receivedData.at(i).toLatin1();
+            if (b == '\n' || b == '\r')
+            {
+                if (firstEOL == 0)
+                {
+                    firstEOL = b;
+                    pos = i;
+                }
+                else if ((pos + 1) == i)
+                {
+                    secondEOL = b;
+                    break;
+                }
+                else
+                    break;
+            }
+        }
+
+        if (firstEOL != 0)
+        {
+            if (secondEOL != 0)
+            {
+                detectedEOL = secondEOL;
+                detectedLineFeed = firstEOL;
+                detectedLineFeed += secondEOL;
+            }
+            else
+            {
+                detectedEOL = firstEOL;
+                detectedLineFeed = firstEOL;
+            }
+
+            detectedLineFeedSize = detectedLineFeed.size();
+        }
+    }
+
+    if (detectedEOL)
+    {
+        // ok, we have EOL, we can no start splitting things up
+
+        // first, check if end of bytes contains our line feed string
+        if (receivedData.size() >= detectedLineFeedSize)
+        {
+            int last = receivedData.lastIndexOf(detectedLineFeed);
+            if (last > 0)
+            {
+                QString s(receivedData.right(last + detectedLineFeedSize));
+                responses.append(s.split(detectedLineFeed, QString::SkipEmptyParts));
+                receivedData.remove(0, last + detectedLineFeedSize);
+            }
+        }
+    }
 }

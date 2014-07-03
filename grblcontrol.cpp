@@ -50,7 +50,7 @@ bool GrblControl::sendCmd(QString line, int currLine)
     for (int i = 0; i < line.length(); i++)
         buf[i] = line.at(i).toLatin1();
 
-    while (!isGrblBufHaveRoom() || port.bytesAvailable())
+    while (!isGrblBufHaveRoom() || port.haveData())
     {
         if (!waitForResponses(1))
         {
@@ -119,8 +119,7 @@ bool GrblControl::waitForResponses(int waitSec)
     QString result;
     while (!result.contains(RESPONSE_OK) && !result.contains(RESPONSE_ERROR))
     {
-        int n = port.PollComportLine(tmp, BUF_SIZE);
-        if (n == 0)
+        if (!port.haveData())
         {
             if (sendCount.size() == 0)
                 return false;
@@ -128,13 +127,9 @@ bool GrblControl::waitForResponses(int waitSec)
             count++;
             SLEEP(100);
         }
-        else if (n < 0)
-        {
-            if (sendCount.size() == 0)
-                return false;
-        }
         else
         {
+            int n = port.getLine(tmp,BUF_SIZE);
             tmp[n] = 0;
             result.append(tmp);
 
@@ -189,7 +184,7 @@ bool GrblControl::waitForResponses(int waitSec)
                 result.clear();
                 continue;
             }
-            else if (port.bytesAvailable())
+            else if (port.haveData())
             {
                 result.clear();
                 continue;

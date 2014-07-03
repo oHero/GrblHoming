@@ -12,8 +12,8 @@ GrblInterface::GrblInterface(RS232& rs)
     currCmdCount(0),
     waiting(false)
 {
-  // use base class's timer - use it to capture random text from the controller
-  startTimer(1000);
+    // use base class's timer - use it to capture random text from the controller
+    startTimer(1000);
 }
 
 bool GrblInterface::sendCmd(QString line, QString& result, QStringList& grblCmdErr, bool recordResponseOnFail, int waitSec, int currLine /* = 0 */)
@@ -86,7 +86,7 @@ bool GrblInterface::sendCmd(QString line, QString& result, QStringList& grblCmdE
 
     int waitSecActual = waitSec == -1 ? controlParams.waitTime : waitSec;
 
-    while (!isGrblBufHaveRoom() || port.bytesAvailable())
+    while (!isGrblBufHaveRoom() || port.haveData())
     {
         QString result;
         QStringList grblCmdErr;
@@ -196,8 +196,7 @@ bool GrblInterface::waitForResponses(QString& result, int waitSec, bool sentReqF
     result.clear();
     while (!result.contains(RESPONSE_OK) && !result.contains(RESPONSE_ERROR) && !resetState.get())
     {
-        int n = port.PollComportLine(tmp, BUF_SIZE);
-        if (n == 0)
+        if (!port.haveData())
         {
             if (sendCount.size() == 0)
                 return false;
@@ -205,16 +204,9 @@ bool GrblInterface::waitForResponses(QString& result, int waitSec, bool sentReqF
             count++;
             SLEEP(100);
         }
-        else if (n < 0)
-        {
-            QString Mes(tr("Error reading data from COM port\n"))  ;
-            err(qPrintable(Mes));
-
-            if (sendCount.size() == 0)
-                return false;
-        }
         else
         {
+            int n = port.getLine(tmp, BUF_SIZE);
             tmp[n] = 0;
             result.append(tmp);
 
@@ -284,7 +276,7 @@ bool GrblInterface::waitForResponses(QString& result, int waitSec, bool sentReqF
                 result.clear();
                 continue;
             }
-            else if (port.bytesAvailable())
+            else if (port.haveData())
             {
                 // comment out this block for more conservative approach
                 if (!finalize && okcount > 0)
@@ -576,8 +568,7 @@ void GrblInterface::timerEvent(QTimerEvent *event)
     {
         for (int i = 0; i < 10 && !shutdownState.get() && !resetState.get(); i++)
         {
-            int n = port.bytesAvailable();
-            if (n == 0)
+            if (!port.haveData())
                 break;
 
             if (waiting && sendCount.size() > 0)
@@ -658,9 +649,14 @@ void GrblInterface::resetPort()
     port.Reset();
 }
 
-int GrblInterface::PollComportLine(char *buf, int size)
+bool GrblInterface::haveData()
 {
-    return port.PollComportLine(buf, size);
+    return port.haveData();
+}
+
+int GrblInterface::getLine(char *buf, const int bufSize)
+{
+    return port.getLine(buf, bufSize);
 }
 
 QString GrblInterface::getDetectedLineFeed()

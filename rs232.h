@@ -11,6 +11,7 @@
 #define RS232_H
 
 #include <QtGlobal>
+#include <QObject>
 
 #include <stdio.h>
 #include <string.h>
@@ -51,29 +52,42 @@
 #endif
 
 
-class RS232
+class RS232 : public QObject
 {
+    Q_OBJECT
+
 public:
     RS232();
+    virtual ~RS232();
+
     //methods
     bool OpenComport(QString commPortStr, QString baudRate);
-    int PollComport(char *buf, int size);
-    int PollComportLine(char *buf, int size);
-    int SendBuf(const char *buf, int size);
+    bool SendBuf(const char *buf, int size);
     void CloseComport();
     void Reset();
-    void flush();
+    //void flush();
     bool isPortOpen();
     QString getDetectedLineFeed();
-    int bytesAvailable();
+    bool haveData();
     void setCharSendDelayMs(int charSendDelayMs);
+    int getLine(char *buf, const int bufSize);
+
+signals:
+
+public slots:
+
+private slots:
+    void onDataAvailable();
 
 private:
 #ifndef QTTEST
     QextSerialPort *port;
     char detectedEOL;
     QString detectedLineFeed;
+    int detectedLineFeedSize;
     int charSendDelayMs;
+    QString receivedData;
+    QStringList responses;
 #else
     class ItemTimed
     {
