@@ -45,12 +45,12 @@ void GCode::sendGrblReset()
     grbl.clearToHome();
 
     QString x(CTRL_X);
-    sendGcodeLocal(x, true, SHORT_WAIT_SEC);
+    sendGcodeLocal(true, x, true, SHORT_WAIT_SEC);
 }
 
 void GCode::sendGrblUnlock()
 {
-    sendGcodeLocal(SET_UNLOCK_STATE_V08c);
+    sendGcodeLocal(true, SET_UNLOCK_STATE_V08c);
 }
 
 // Slot for gcode-based 'zero out the current position values without motion'
@@ -133,7 +133,7 @@ void GCode::sendGcode(QString line)
     {
         pollPosWaitForIdle(false);
         // normal send of actual commands
-        sendGcodeLocal(line, false);
+        sendGcodeLocal(false, line, false);
     }
 
     pollPosWaitForIdle(checkMeasurementUnits);
@@ -215,7 +215,7 @@ void GCode::sendGcodeAndGetResult(int id, QString line)
 
 // To be called only from this class, not from other threads. Use above two methods for that.
 // Wraps sendGcodeInternal() to allow proper handling of failure cases, etc.
-bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */, int currLine /* = 0 */)
+bool GCode::sendGcodeLocal(bool waitForResp, QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */, int currLine /* = 0 */)
 {
     QString result;
     sendMsg("");
@@ -238,12 +238,20 @@ bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */
     }
     else
     {
-        if (!grbl.waitForAllResponses(grblCmdErrors))
-            return false;
+        if (waitForResp)
+        {
+            if (!grbl.waitForAllResponses(grblCmdErrors))
+                return false;
+        }
 
         if (checkGrbl(result))
         {
             emit enableGrblDialogButton();
+        }
+
+        if (!waitForResp)
+        {
+            grbl.setWait();
         }
     }
     grbl.setResetState(false);
@@ -484,13 +492,13 @@ void GCode::sendFile(QString path)
                     bool ret = false;
                     if (outputList.size() == 1)
                     {
-                        ret = sendGcodeLocal(outputList.at(0), false, -1, currLine + 1);
+                        ret = sendGcodeLocal(false, outputList.at(0), false, -1, currLine + 1);
                     }
                     else
                     {
                         foreach (QString outputLine, outputList)
                         {
-                            ret = sendGcodeLocal(outputLine, false, -1, currLine + 1);
+                            ret = sendGcodeLocal(false, outputLine, false, -1, currLine + 1);
 
                             if (!ret)
                                 break;
@@ -1059,7 +1067,7 @@ void GCode::gotoXYZFourth(QString line)
             && controlParams.positionRequestType == PREQ_ALWAYS)
         pollPosWaitForIdle(false);
 
-    if (sendGcodeLocal(line))
+    if (sendGcodeLocal(false, line))
     {
         if (!queryPos)
             pollPosWaitForIdle(false);
@@ -1109,20 +1117,20 @@ void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj,
 
 bool GCode::SendJog(QString cmd, bool absoluteAfterAxisAdj)
 {
-    pollPosWaitForIdle(false);
+    //pollPosWaitForIdle(false);
 
     // G91 = distance relative to previous
-    bool ret = sendGcodeLocal("G91\r");
+    bool ret = sendGcodeLocal(false, "G91\r");
 
-    bool result = ret && sendGcodeLocal(cmd.append("\r"));
+    bool result = ret && sendGcodeLocal(false, cmd.append("\r"));
 
     if (result)
     {
-        pollPosWaitForIdle(false);
+        //pollPosWaitForIdle(false);
     }
 
     if (absoluteAfterAxisAdj)
-        sendGcodeLocal("G90\r");
+        sendGcodeLocal(false, "G90\r");
 
     return result;
 }
@@ -1159,7 +1167,7 @@ void GCode::setResponseWait(ControlParams controlParamsIn)
 // 0.8c and above only!
 void GCode::checkAndSetCorrectMeasurementUnits()
 {
-    sendGcodeLocal(REQUEST_PARSER_STATE_V08c, false);
+    sendGcodeLocal(true, REQUEST_PARSER_STATE_V08c, false);
 
     if (grbl.isIncorrectMeasurementUnits())
     {
@@ -1178,7 +1186,7 @@ void GCode::checkAndSetCorrectMeasurementUnits()
     }
     else
     {
-        sendGcodeLocal(SETTINGS_COMMAND_V08c);
+        sendGcodeLocal(true, SETTINGS_COMMAND_V08c);
 
         if (grbl.isIncorrectLcdDisplayUnits())
         {
@@ -1200,24 +1208,24 @@ void GCode::checkAndSetCorrectMeasurementUnits()
 void GCode::setOldFormatMeasurementUnitControl()
 {
     if (controlParams.useMm)
-        sendGcodeLocal("G21");
+        sendGcodeLocal(false, "G21");
     else
-        sendGcodeLocal("G20");
+        sendGcodeLocal(false, "G20");
 }
 
 void GCode::setConfigureMmMode(bool setGrblUnits)
 {
-    sendGcodeLocal("$13=0");
+    sendGcodeLocal(false, "$13=0");
     if (setGrblUnits)
-        sendGcodeLocal("G21");
+        sendGcodeLocal(false, "G21");
     positionUpdate(true);
 }
 
 void GCode::setConfigureInchesMode(bool setGrblUnits)
 {
-    sendGcodeLocal("$13=1");
+    sendGcodeLocal(false, "$13=1");
     if (setGrblUnits)
-        sendGcodeLocal("G20");
+        sendGcodeLocal(false, "G20");
     positionUpdate(true);
 }
 
@@ -1241,7 +1249,7 @@ GCode::PosReqStatus GCode::positionUpdate(bool forceIfEnabled /* = false */)
     {
         if (forceIfEnabled)
         {
-            return sendGcodeLocal(REQUEST_CURRENT_POS) ? POS_REQ_RESULT_OK : POS_REQ_RESULT_ERROR;
+            return sendGcodeLocal(true, REQUEST_CURRENT_POS) ? POS_REQ_RESULT_OK : POS_REQ_RESULT_ERROR;
         }
         else
         {
@@ -1249,7 +1257,7 @@ GCode::PosReqStatus GCode::positionUpdate(bool forceIfEnabled /* = false */)
             if (ms >= controlParams.postionRequestTimeMilliSec)
             {
                 pollPosTimer.restart();
-                return sendGcodeLocal(REQUEST_CURRENT_POS) ? POS_REQ_RESULT_OK : POS_REQ_RESULT_ERROR;
+                return sendGcodeLocal(true, REQUEST_CURRENT_POS) ? POS_REQ_RESULT_OK : POS_REQ_RESULT_ERROR;
             }
             else
             {

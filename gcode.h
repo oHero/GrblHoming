@@ -95,7 +95,7 @@ private:
         POS_REQ_RESULT_UNAVAILABLE
     };
 private:
-    bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, int currLine = 0);
+    bool sendGcodeLocal(bool waitForResp, QString line, bool recordResponseOnFail = false, int waitSec = -1, int currLine = 0);
     bool waitForStartupBanner(QString& result, int waitSec, bool failOnNoFound);
     QString removeUnsupportedCommands(QString line);
     QString reducePrecision(QString line);

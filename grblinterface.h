@@ -78,6 +78,8 @@ public:
 
     static bool checkForGetPosStr(QString& line);
 
+    void setWait() { waiting = true; }
+
 signals:
     void addList(QString line);
     void addListFull(QStringList list);
@@ -101,7 +103,7 @@ protected:
 
 private:
     bool waitForResponses(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool finalize, QStringList& grblCmdErr);
-    void parseCoordinates(const QString& received);
+    bool parseCoordinates(const QString& received);
 
 
 private:
@@ -125,6 +127,8 @@ private:
     int sliderZCount;
     bool positionValid;
     int numaxis;
+    int currCmdCount;
+    bool waiting;
 };
 
 #endif // GRBLINTERFACE_H

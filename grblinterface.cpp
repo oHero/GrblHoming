@@ -8,7 +8,9 @@ GrblInterface::GrblInterface(RS232& rs)
     maxZ(0), motionOccurred(false),
     sliderZCount(0),
     positionValid(false),
-    numaxis(DEFAULT_AXIS_COUNT)
+    numaxis(DEFAULT_AXIS_COUNT),
+    currCmdCount(0),
+    waiting(false)
 {
   // use base class's timer - use it to capture random text from the controller
   startTimer(1000);
@@ -76,9 +78,9 @@ bool GrblInterface::sendCmd(QString line, QString& result, QStringList& grblCmdE
         buf[i] = line.at(i).toLatin1();
 
     if (ctrlX)
-        diag(qPrintable(tr("SENDING[%d]: 0x%02X (CTRL-X)\n")), currLine, buf[0]);
+        diag(qPrintable(tr("SENDING[%d]: 0x%02X (CTRL-X)\n")), currCmdCount/*currLine*/, buf[0]);
     else
-        diag(qPrintable(tr("SENDING[%d]: %s\n")), currLine, buf);
+        diag(qPrintable(tr("SENDING[%d]: %s\n")), currCmdCount/*currLine*/, buf);
 
     emit setQueuedCommands(sendCount.size(), true);
 
@@ -98,9 +100,11 @@ bool GrblInterface::sendCmd(QString line, QString& result, QStringList& grblCmdE
     }
 
     if (ctrlX)
-        sendCount.append(CmdResponse("(CTRL-X)", line.length(), currLine));
+        sendCount.append(CmdResponse("(CTRL-X)", line.length(), currCmdCount/*currLine*/));
     else
-        sendCount.append(CmdResponse(buf, line.length(), currLine));
+        sendCount.append(CmdResponse(buf, line.length(), currCmdCount/*currLine*/));
+
+    currCmdCount++;
 
     //diag("DG Buffer Add %d", sendCount.size());
 
@@ -260,7 +264,10 @@ bool GrblInterface::waitForResponses(QString& result, int waitSec, bool sentReqF
             else
             {
                 diag(qPrintable(tr("GOT: '%s'\n")), tmpTrim.trimmed().toLocal8Bit().constData());
-                parseCoordinates(received);
+                if (!parseCoordinates(received))
+                {
+                    emit addList(tmpTrim.trimmed());
+                }
             }
 
             int total = 0;
@@ -330,7 +337,10 @@ bool GrblInterface::waitForResponses(QString& result, int waitSec, bool sentReqF
                 }
                 else
                 {
-                    parseCoordinates(received);
+                    if (!parseCoordinates(received))
+                    {
+                        emit addList(tmpTrim.trimmed());
+                    }
                 }
             }
             count = 0;
@@ -387,11 +397,11 @@ bool GrblInterface::waitForResponses(QString& result, int waitSec, bool sentReqF
     return status;
 }
 
-void GrblInterface::parseCoordinates(const QString& received)
+bool GrblInterface::parseCoordinates(const QString& received)
 {
     int ms = parseCoordTimer.elapsed();
     if (ms < 500)
-        return;
+        return false;
 
     parseCoordTimer.restart();
 
@@ -497,13 +507,14 @@ void GrblInterface::parseCoordinates(const QString& received)
         emit setLastState(state);
 
         lastState = state;
-        return;
+        return good;
     }
     // TODO fix to print
     //if (!good /*&& received.indexOf("MPos:") != -1*/)
     //    err(qPrintable(tr("Error decoding position data! [%s]\n")), qPrintable(received));
 
     lastState = "";
+    return good;
 }
 
 bool GrblInterface::waitForAllResponses(QStringList& grblCmdErr)
@@ -557,6 +568,36 @@ void GrblInterface::sendStatusList(QStringList& listToSend)
     }
 }
 
+void GrblInterface::timerEvent(QTimerEvent *event)
+{
+    Q_UNUSED(event);
+
+    if (port.isPortOpen())
+    {
+        for (int i = 0; i < 10 && !shutdownState.get() && !resetState.get(); i++)
+        {
+            int n = port.bytesAvailable();
+            if (n == 0)
+                break;
+
+            if (waiting && sendCount.size() > 0)
+            {
+                diag("Waiting for response in timer event\n");
+                QStringList grblCmdErr;
+                QString result;
+                waitForResponses(result, controlParams.waitTime, false, false, true, grblCmdErr);
+                waiting = false;
+            }
+        }
+
+        if (shutdownState.get())
+        {
+            return;
+        }
+    }
+}
+
+/*
 // called once a second to capture any random strings that come from the controller
 void GrblInterface::timerEvent(QTimerEvent *event)
 {
@@ -591,9 +632,13 @@ void GrblInterface::timerEvent(QTimerEvent *event)
                 listToSend.append(list.at(i));
         }
 
+        if (listToSend.size() > 0)
+            diag("Timer has %d items", listToSend.size());
+
         sendStatusList(listToSend);
     }
 }
+*/
 
 bool GrblInterface::sendToPort(const char *buf)
 {
