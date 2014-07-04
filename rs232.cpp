@@ -111,14 +111,14 @@ bool RS232::SendBuf(const char *buf, int size)
             SLEEP(charSendDelayMs);
         }
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 1000; i++)
         {
             if (wroteBytes)
             {
                 wroteBytes = false;
                 break;
             }
-            SLEEP(10);
+            SLEEP(1);
         }
     }
 
