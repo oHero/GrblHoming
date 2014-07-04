@@ -10,7 +10,8 @@
 #include "rs232.h"
 
 RS232::RS232()
-    : port(NULL), detectedEOL(0), charSendDelayMs(DEFAULT_CHAR_SEND_DELAY_MS), detectedLineFeedSize(0)
+    : port(NULL), detectedEOL(0), charSendDelayMs(DEFAULT_CHAR_SEND_DELAY_MS), detectedLineFeedSize(0),
+      wroteBytes(false)
 {
 }
 
@@ -53,6 +54,7 @@ bool RS232::OpenComport(QString commPortStr, QString baudRate)
     port = new QextSerialPort(commPortStr, settings);// default is event driven, alternate:, QextSerialPort::Polling);
 
     connect(port, SIGNAL(readyRead()), this, SLOT(onDataAvailable()));
+    connect(port, SIGNAL(bytesWritten(qint64)), this, SLOT(onBytesWritten(qint64)));
 
     port->open(QIODevice::ReadWrite);
 
@@ -83,13 +85,11 @@ bool RS232::SendBuf(const char *buf, int size)
     fflush(stdout);
 #endif
 
-    port->waitForBytesWritten(-1);// this usually doesn't do anything, but let's put it here in case
-
-#if 1
     // On very fast PCs running Windows we have to slow down the sending of bytes to grbl
     // because grbl loses bytes due to its interrupt service routine (ISR) taking too many clock
     // cycles away from serial handling.
     int result = 0;
+    wroteBytes = false;
     for (int i = 0; i < size; i++)
     {
         result = port->write(&buf[i], 1);
@@ -110,37 +110,18 @@ bool RS232::SendBuf(const char *buf, int size)
         {
             SLEEP(charSendDelayMs);
         }
+
+        for (int i = 0; i < 100; i++)
+        {
+            if (wroteBytes)
+            {
+                wroteBytes = false;
+                break;
+            }
+            SLEEP(10);
+        }
     }
 
-#else
-    // DO NOT RUN THIS CODE
-    int result = port->write(buf, size);
-    if (result == 0)
-    {
-        err("Unable to write bytes to port probably due to outgoing queue full. Write data lost!");
-        /* the following code doesn't seem to help. Generate an error instead
-        int limit = 0;
-        while (!result && limit < 100)
-        {
-            SLEEP(100);
-            result = port->write(buf, size);
-            limit++;
-        }
-
-        if (!result)
-        {
-            err("Unable to write %d bytes to port!", size);
-        }
-        else if (result != size)
-            err("Unexpected: Retry send wrote %d bytes out of expected %d\n", result, size);
-        */
-    }
-    else if (result == -1)
-    {
-        err("Error writing to port. Write data lost!");
-        result = 0;
-    }
-#endif
     return result >= 0;
 }
 
@@ -277,4 +258,10 @@ void RS232::onDataAvailable()
             }
         }
     }
+}
+
+void RS232::onBytesWritten(qint64 bytes)
+{
+    info("Wrote %d bytes", bytes);
+    wroteBytes = true;
 }

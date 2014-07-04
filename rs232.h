@@ -78,6 +78,7 @@ public slots:
 
 private slots:
     void onDataAvailable();
+    void onBytesWritten(qint64);
 
 private:
 #ifndef QTTEST
@@ -88,6 +89,7 @@ private:
     int charSendDelayMs;
     QString receivedData;
     QStringList responses;
+    bool wroteBytes;
 #else
     class ItemTimed
     {
