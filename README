@@ -9,14 +9,17 @@ project.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+******************************************************************************
+All binary Mac OX, Linux, Win32 are available in 'Releases' (October 04, 2014) 
+******************************************************************************
+
 --------------------------------------------------------------------------------
 GCV  : Grbl Controller Visualizer  is a 3D extension of GrblController-3.6.1
 --------------------------------------------------------------------------------
 
+
 GCV-3.6.1-T4  Grbl Controller Visualizer  (LETARTARE proposals August 22, 2014)
 
-An executable 'Win32' into 'winexe/GCV-3.6.1-T4-cb.jtgcv'.  
-This is a file Win32 compressed, change the extension 'jtgcv -> 7z' to decompress.
 
 * 3.6.1-T3 +
 
