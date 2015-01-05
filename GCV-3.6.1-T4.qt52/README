@@ -9,24 +9,20 @@ project.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
-******************************************************************************
-All binary Mac OX, Linux, Win32 are available in 'Releases' (October 04, 2014) 
-******************************************************************************
-
 --------------------------------------------------------------------------------
 GCV  : Grbl Controller Visualizer  is a 3D extension of GrblController-3.6.1
 --------------------------------------------------------------------------------
 
-GCV-3.6.1-T4.qt52	Grbl Controller Visualizer  (LETARTARE proposals January 05, 2015)
+GCV-3.6.1-T4  Grbl Controller Visualizer  (LETARTARE proposals August 22, 2014)
 
-
-GCV-3.6.1-T4.qt47  	Grbl Controller Visualizer  (LETARTARE proposals August 14, 2014)
+An executable 'Win32' into 'winexe/GCV-3.6.1-T4-cb.jtgcv'.
+This is a file Win32 compressed, change the extension 'jtgcv -> 7z' to decompress.
 
 * 3.6.1-T3 +
 
 1- Analyzes the gcode with 4 axes X, Y, Z, T   ( fourth axis ),
 2- New display console ('Console') commands, with the ability to copy, delete
-	text part, delete the selected (or all) text, print the selected (or all) text
+	text part, delete the selected (or all)  text, print the selected (or all) text
 3- Display speed rate XYZ with 'Lcd', display last spindle speed,
 4- Visualizes the 'Gcode' XYZ 3D with motion mouse  :
 	- A help button to explain the multiple possible actions on the drawing,
@@ -67,8 +63,8 @@ GCV-3.6.1-T4.qt47  	Grbl Controller Visualizer  (LETARTARE proposals August 14, 
 
 - Works with versions Grbl :
 	1- Three axes 0.8c, 0.9d, 0.9e, 0.9f, the last 0.9g
-   2- Four axes 0845, 0.8c1, 0.8c2 (0.8c to 4 axes) with MEGA2560
-	https://github.com/LETARTARE/Grbl-xx_with_Arduino/tree/master/Grbl8c2Mega2560
+	2- Four axes 0845, 0.8c1, 0.8c2 (0.8c to 4 axes) with MEGA2560
+  https://github.com/LETARTARE/Grbl-xx_with_Arduino/tree/master/Grbl8c2Mega2560
 
 - KNOWN BUGS
 	- In the mode 'Check', it does not use the command line to send '$C'
@@ -78,51 +74,3 @@ GCV-3.6.1-T4.qt47  	Grbl Controller Visualizer  (LETARTARE proposals August 14, 
 
 
 --------------------------------------------------------------------------------
-Fix old bug to T1, T2, T3 (July 7, 2014)
-
-V3.6.1-T3   (LETARTARE proposals June 06, 2014)
-
-* 3.6.1-T2 +
-
-1- complete analysis of the Grbl version for 0.8cx versions
-2- use 'Check' Grbl mode "$C"
-3- Updating of the French translation
-
-- Works with versions Grbl :
-   1- Three axes 0.8c, 0.9d, 0.9e,
-   2- Four axes 0845, 0.8c1 (0.8c to 4 axes) with MEGA2560
-	  https://github.com/LETARTARE/Grbl-xx_with_Arduino/tree/master/Grbl8c1Mega2560
-
---------------------------------------------------------------------------------
-
-V3.6.1-T2   (LETARTARE proposals June 03, 2014)
-
-* 3.6.1-T1 +
-
-1- Display Grbl version bottom right of the window    (Firmware : Grbl 0.8c)
-2- displays the total number of lines of loaded file, on the line runtime  (Lines : 1245)
-3- Displays the current line of the file read, on the line runtime  (Lines : 150/1245)
-4- Updating of the French translation
-
-- Works with versions Grbl :
-   1- Three axes 0.8c, 0.9d, 0.9e,
-   2- Four axes 0845, 0.8c1 (0.8c to 4 axes) with MEGA2560
-	  https://github.com/LETARTARE/Grbl-xx_with_Arduino/tree/master/Grbl8c1Mega2560
-
---------------------------------------------------------------------------------
-
-V3.6.1-T1   (LETARTARE proposals June 01, 2014)
-
-- 3.6.1 +
-1- Improved to the same card 3 and 4 axis detection
-2- Displays the line numbers of the file if no number exists
-3- Updating of the French translation
-
-- Works with versions Grbl :
-   1- Three axes 0.8c, 0.9d, 0.9e,
-   2- Four axes 0845, future 0.8c1 (0.8c to 4 axes)
-
---------------------------------------------------------------------------------
-
-
-
